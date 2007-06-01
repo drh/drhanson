@@ -1,0 +1,212 @@
+.ds CM
+.ds HM 2i
+.ds LF \s8Foil %\s0
+.ds CF
+.ds RF \s8\*(DY\s0
+.nr PS 20
+.ps 20
+.nr VS 24
+.vs 24
+.nr fg 0
+.de SL
+.if \\n(fg>0 .bp
+.nr fg 1
+.ce 1
+\s24\\$1\s0
+.sp .5i
+.nf
+..
+.de BU
+.sp .5i
+\(bu \\$1
+.ta .5i +.5i +.5i +.5i +.5i +.5i +.5i +.5i
+..
+.de PS
+.DS I .5i
+.ta .5i +.5i +.5i +.5i +.5i +.5i +.5i +.5i
+.ft B
+..
+.de PE
+.ft R
+.DE
+..
+.SL "\fIEZ\fP"
+.DS C
+A High-Level Programming 
+and Command Language
+.sp 2
+Christopher W. Fraser
+David R. Hanson
+.sp 2
+Department of Computer Science
+University of Arizona
+Tucson, Arizona
+.DE
+.SL Design
+.DS L
+.ta \w'\(bu 'u +\w'\(bu 'u
+\(bu	An environment like APL, Lisp, Smalltalk.
+	String-processing like SNOBOL4, SL5, Icon.
+.DE
+.BU "A programming \fIand\fP command language."
+.TS
+center;
+l l.
+\fIProgramming\fP	\fICommand\fP
+\fIlanguages\fP	\fIlanguages\fP
+
+e.g., Pascal	e.g., UNIX Shell
+Usual control	Same, coroutines
+Early binding	Late binding
+Low-level types	High-level types
+.TE
+.SL "Fuse Types"
+.BU "\fIEZ\fP provides general types:"
+.TS
+center;
+l l.
+\fIEZ type\fP	\fITraditional types\fP
+number	integer
+	real
+string	string
+	text file
+procedure	procedure
+	program
+	object file
+	executable file
+table	array
+	record
+	associative table
+	directory
+.TE
+.BU "Implementation manages representation."
+.DE
+.SL "Appearance"
+.BU "Like C, Icon"
+.PS
+alphas = lcase || ucase || "0123456789"
+
+max = max < a
+
+procedure lc(s)
+	local linecount
+
+	linecount = 0
+	while (s = s[upto("\en", s)+1:0])
+		linecount = linecount + 1
+	return (linecount)
+end
+
+doc[lc] = "lc(s) counts the lines in s."
+.PE
+.SL "Make Everything Do Something"
+.BU "Conversions between numbers and strings:"
+.PS
+s = "Back in 5 minutes."
+s[9:10] = s[9:10] + 20
+.PE
+.BU "Automatic table creation:"
+.PS
+paper["title"] = "EZ Programming"
+.PE
+.BU "Convert tables to strings:"
+.PS
+find("fix me", paper)
+.PE
+.BU "Convert functions to strings:"
+.PS
+find("fix me", lc)
+.PE
+.BU "Convert strings to functions:"
+.PS
+while (read()())
+	;
+.PE
+.SL "Avoid Duplication"
+.BU "\fIEZ\fP's symbol table is an \fIEZ\fP table."
+.PS
+x == root["x"]
+.PE
+.sp .5i
+\(bu Compiler searches \fBroot\fP, \fBroot[".."]\fP, ...
+.ta .5i +.5i +.5i +.5i +.5i +.5i +.5i +.5i
+.DS L
+.ta \w'\(bu Like 'u
+\(bu Like nested scope,
+	Smalltalk inheritance,
+	UNIX search lists.
+.DE
+.BU "UNIX \fBchdir\fP analog:"
+.PS
+procedure ChDir(dir)
+	root[dir][".back"] = root
+	root = root[dir]
+end
+.PE
+.SL "Editing ``Directories''"
+.BU "Listing contents:"
+.PS
+for (i in root)
+	write(i)
+.PE
+.BU "Interactive removal:"
+.PS
+for (i in root) {
+	write(i)
+	if (read() == "y")
+		remove(root, i)
+	}
+.PE
+.BU "Changing the hierarchy:"
+.PS
+root["old.."] = root[".."]
+root[".."] = NoviceFunctions
+ ...
+root[".."] = root["old.."]
+.PE
+.SL "Editing ``Files''"
+.BU "Delete a table entry:"
+.PS
+procedure Delete(n)
+	if (integer(n))
+		for (; n < size(root); n = n + 1)
+			root[n] = root[n+1]
+	remove(root, n)
+end
+
+Insert(3, root[1])
+Delete(1)
+
+Insert("new", root["old"])
+Delete("old")
+.PE
+.SL "Editing Documents"
+.DS L
+.ta \w'\(bu 'u
+\(bu	A paper is a table of sections.
+	A section is a table of paragraphs.
+	A paragraph is a table of sentences.
+.DE
+.BU "Delete introduction:"
+.PS
+Delete("Introduction")
+.PE
+.BU "Delete just its first paragraph:"
+.PS
+ChDir("Introduction")
+Delete(1)
+.PE
+.BU "Delete just its second sentence:"
+.PS
+ChDir("Introduction")
+ChDir(1)
+Delete(2)
+.PE
+.SL Implementation
+.BU "Generate and execute interpretive code."
+.BU "Fixed-size descriptors represent all values."
+.BU "Descriptors may point to pages."
+.BU "Implementation handles paging, caching."
+.BU "Implementation picks table representation."
+.BU "Paging out \fBroot\f saves state."
+.BU "Garbage collected off-line."

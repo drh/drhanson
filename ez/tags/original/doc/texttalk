@@ -1,0 +1,316 @@
+.ps 14
+.nr PS 14
+.vs 17
+.nr VS 17
+.SH
+Introduction (0:30)
+.PP
+I'm going to describe a language called ``EZ'',
+which has been developed by Dave Hanson and me at the University of Arizona.
+.PP
+EZ is a command language \fIand\fP a programming language.
+Since command languages and programming languages are familiar,
+this talk is not about radically new language features,
+but rather about integrating usually distinct facilities,
+about making replacing two languages with one.
+If computer science is a parade,
+we're not out front with the drum major now.
+We're around back, behind the animals, with a scoop,
+taking several small piles and making them into one big one.
+.bp
+.SH
+Design (1:50)
+.PP
+EZ comes with an environment, like APL, Lisp, and Smalltalk.
+Where these languages use 
+the array-processing, list-processing, and object-oriented programming models,
+EZ is based on string-processing languages
+like SNOBOL4 and its successors SL5 and Icon.
+.PP
+EZ is the programming language \fIand\fP command language for this environment.
+This reduces duplication and makes the package easier to use and implement.
+Designers of programming environments are sometimes in the position
+of Mohammed having to go a mountain of an operating system.
+By designing the whole package,
+we're making the mountain meet Mohammed halfway.
+.PP
+Unifying command and programming languages
+is challenging because they usually differ in important ways.
+For example, think of the differences between PASCAL and the UNIX shell.
+.PP
+The differences aren't so much in control structures.
+Command languages are more likely to offer something exotic like coroutines,
+but the remaining conditionals, loops, procedures, etc.,
+are similar in both command and programming languages.
+EZ follows suit here.
+.PP
+Binding times usually differ more than control structures.
+Traditional programming languages usually bind, 
+for example, an identifier's datatype at compile time,
+where command languages usually wait until execution time.
+EZ follows the tradition of late binding times 
+that has proven useful in its string-processing predecessors.
+.PP
+Finally, datatypes are one of the biggest differences
+between programming languages and command languages.
+Programming languages usually manipulate
+low-level types like integers and records,
+where command languages usually manipulate
+high-level types like files and directories.
+EZ reduces this dissimilarity 
+by moving the differences between some types
+out of the language and into the implementation.
+We call this ``type fusion''.
+.bp
+.SH
+Type Fusion (1:00)
+.PP
+EZ supports four general types:
+numbers, strings, procedures, and tables.
+The implementation maps these onto more conventional types automatically.
+The implementation manages primary and secondary memory,
+so the user sees no difference between a string and a text file,
+nor between a procedure and an object or executable file.
+Further, there's no notion of a ``main'' program,
+so any procedure can be invoked from the command interpreter.
+.PP
+Tables are as in SNOBOL4:
+Values and indices are heterogeneous.
+Tables with only small integral indices are stored as expandable arrays,
+and all other tables are stored as hash tables.
+Again, the implementation handles secondary storage,
+so tables holding tables can serve as a hierarchical file system.
+.PP
+Be warned.
+I may talk about files and directories in the next few minutes,
+but I do so only to relate examples back to conventional practice.
+\fIThere are no files or directories in EZ, 
+only strings, procedures, and tables,
+parts of which may reside on secondary storage.\fP
+.bp
+.SH
+Appearance (1:50)
+.PP
+Before we can proceed to any telling examples, 
+we'll need a quick language overview.
+EZ looks like C or Icon,
+so, for example, the first statement assigns to alphas the catenation
+of the digits and variables lcase and ucase.
+.PP
+The next statement is a little trickier.
+Most expressions yield values, but some may not.
+For example, 
+the relational operators return their second operand when they succeed; 
+otherwise they return nothing.
+Assignment of ``nothing'' is ignored,
+so this second statement changes max to a only if a exceeds max.
+.PP
+Think of the procedure declaration as an assignment too,
+one that assigns to lc a procedure that counts the lines in a string or file.
+This procedure shows some string scanning.
+The call in the loop test on the built-in procedure upto
+returns the index of the first newline character in s.
+The substring starting with the next character
+and continuing through the end of the string replaces s.
+.PP
+The last statement on the slide introduces tables.
+The index here is a procedure.
+It's the actual procedure, not, say, the procedure name,
+so any alias for lc can be used to extract this bit of documentation.
+.PP
+A final note on syntax.
+To serve as a programming language,
+EZ carries a bit more syntactic baggage than most command languages:
+quote marks, commas, parentheses, etc.
+However, we can write a command interpreter
+that takes commands like those for the UNIX shell
+and turns them into EZ function calls.
+That's just syntactic sugar and easily solved.
+.PP
+That's enough of an overview to allow us to move on to examples
+displaying the principles behind EZ.
+.bp
+.SH
+Make Everything Do Something (1:50)
+.PP
+One of these principles is ``make everything do something''.
+Automatic conversions are natural examples of this principle.
+In general, if there's a way to convert between types, EZ tries it.
+.PP
+The first example here converts the character between positions 9 and 10 
+to a number for the addition of 20 and back to a string for replacement.
+The string grows automatically to accommodate the extra digit.
+.PP
+Variables are also converted to tables as necessary.
+So if paper wasn't a table before that second example, it is now.
+.PP
+Tables are converted to strings by catenating their elements,
+so the third example, find(``fix me'', paper),
+uses the built-in procedure find to locate the string ``fix me'' 
+in a table just as it normally would in a string.
+.PP
+Functions are converted quote-unquote to strings by returning the source code
+that was presented to EZ's compiler when the procedure was created.
+Thus the same find idiom can be used to see if a procedure
+included the string ``fix me'' when it was compiled.
+This ``conversion'' costs little since it merely retrieves a pointer 
+to the source code, which is an EZ value anyway.
+.PP
+Finally, strings are converted to functions by compiling them.
+Consider the last example on this slide.
+The first set of empty parentheses after the read
+says to invoke the procedure read and return the next line 
+from the standard input.
+The second set says to invoke the code just read.
+Since read returns a string, 
+this first converts the string to a procedure, by compiling it.  
+Thus this while loop reads and executes a sequence of lines
+and forms a simple command interpreter.
+.PP
+Since conversions of numbers and procedures to strings are roughly invertible,
+novices can survive by knowing just strings and tables.
+Compilation and numbers are just optimizations.
+.bp
+.SH 
+Avoid Duplication (1:30)
+.PP
+Another of EZ's principles is ``avoid duplication''.
+Type fusion helps a lot here.
+For example, under a conventional system,
+indexing in a string and seeking in a file are implemented separately.
+Under EZ, files are strings, so seeking is just substring indexing.
+.PP
+EZ also avoids duplication by making code do double duty.
+For example, EZ tables were implemented for users,
+but an EZ table also serves as the symbol table in EZ's compiler.
+This table is named ``root'',
+and the the compiler searches it to determine the meaning of free variables.
+Thus the expressions ``x'' and ``root[``x'']'' are equivalent.
+.PP
+Actually, the compiler searches more than just root.
+It also searches root's ``..'' entry, and then its ``..'' entry, and so on
+until it find the identifier it's looking for,
+or until it runs out of ``..'' tables.
+This can be used to implement features 
+like nested scopes, Smalltalk inheritance, and the UNIX shell's search lists.
+.PP
+Using an EZ table as the EZ symbol table does more than save code.
+It also makes the system more powerful,
+because it allows EZ programs some control over the compiler.
+For example, the procedure ChDir on the bottom of the slide
+implements something like the UNIX change-directory command,
+setting root to one of its entries after establishing a path back.
+The current directory quote-unquote could be stored in any variable,
+but storing it in root has 
+the compiler search the current directory to bind free variables.
+.bp
+.SH
+Editing Directories (1:30)
+.PP
+Now I'm going to slow down the introduction of language features,
+and present three slides that suggest some things that EZ makes, uhh, easy.
+Most of these examples are from a table editor that we're developing.
+It's meant to subsume a text editor
+\fIand\fP conventional operating system utilities for editing \*(em
+that is, examining and modifying \*(em directories.
+.PP
+The first example is the EZ analog of a utility
+that prints the names of the files in the current directory.
+It uses a special for statement that enumerates a table's indices.
+.PP
+The second example is the EZ analog of a UNIX utility
+that's used occasionally to clean up a messy directory.
+It prompts for each file name in that directory
+and asks the user whether it is to be deleted.
+The EZ code is like the last example,
+with code to read the user's response, check it, and conditionally call
+the built-in function remove to delete an entry and its index from the table.
+This utility would usually be used on a table storing a directory,
+but it can, of course, be used on any table.
+For example, it could be used to remove unwanted built-ins
+from the system's symbol table.
+.PP
+The last example on this slide might form part of a utility
+to restrict some compilations to a ``safe'' set of globals.
+Note that it saves root's old ``..'' entry,
+then it sets this entry to some simpler set,
+and restores it after the compilations.
+.bp
+.SH
+Editing Files (1:00)
+.PP
+Here's a function to delete item n from a table.
+If n is an integer, it slides subsequent items up to fill the gap.
+There's a corresponding function to insert an item in a table.
+It slides items down to make room if the insertion index is a integer.
+.PP
+The generality of tables allows these functions to combine
+in some ways that are not always obvious at first.
+For example, the idiom ``insert(3,root[1]);delete(1)''
+inserts whatever's in line 1 after line 3 and then deletes line 1,
+effectively moving line 1 to line 3.
+The same idiom applied to non-integral indices
+gives a new name or index to an old value.
+.PP
+So, while it may not be obvious,
+this table editor has one command that subsumes
+a line editor's ``move lines'' command 
+and a directory system's ``rename file'' command.
+Fewer types make functions more useful.
+.bp
+.SH
+Editing Documents (1:00)
+.PP
+Suppose one were to implement an editor that knew about documents.
+For example, it might have commands to 
+move a section, paragraph, or sentence as a unit.
+VI and EMACS have such commands, but they implement them by scanning text
+to find section, paragraph, and sentence boundaries.
+.PP
+Under EZ, a document can be structured with 
+a paper as a table of sections,
+a section as a table of paragraphs,
+and a paragraph as a table of sentences.
+This could get expensive
+if each interior node were an external file system directory,
+but it's affordable under EZ.
+.PP
+We could build an editor for these structures using primitives
+we've already seen.
+For example, we can delete sentences, paragraphs, and sections
+with that Delete function that we built for a simple line editor.
+Recall that ChDir moves the root to a new spot in a hierarchy of tables,
+and that Delete removes an entry from root.
+Thus Delete removes a section if we're ChDir-ed 
+to the table holding the whole paper,
+it removes a paragraph if we're ChDir-ed 
+down one level to a section like the introduction,
+and it removes a sentence if we're ChDir-ed 
+down two levels to a paragraph like the introduction's paragraph 1.
+.PP
+Again, fewer types make functions more useful.
+.bp
+.SH
+Implementation (1:00)
+.PP
+Enough examples.
+I'll close with a few words on the implementation. 
+.PP
+EZ's compiler generates an internal code that is subsequently interpreted.
+Values are represented using small, fixed-size descriptors.
+Descriptors for all values but numbers 
+point off into a virtual address space of pages holding the actual data.
+The implementation adapts the representation of tables on the fly,
+using an expandable array or a hash table as seems appropriate.
+.PP
+The implementation swaps pages into and out of a cache in primary memory.
+Since one can reach only those pages reachable from the root,
+the state of the system is saved by simply paging out the root.
+An off-line garbage collector starts at the root to reclaim unreachable pages.
+.PP
+By avoiding duplication,
+EZ has been implemented in about 3600 lines of C and YACC.
+We're developing it on a PDP-11 and VAX under UNIX,
+but we hope to put it on a personal computer someday
+and have it form the complete environment.
+The end.

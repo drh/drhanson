@@ -1,0 +1,33 @@
+-  swap
+!  remove semicolons
+!  make include work
+!  sequencing thru tables (for x in y...)
+!  files
+   syntax errors
+!  write 'The S Programming Language'
+!  builtin values:
+!     input
+!     output
+   builtin functions:
+!     many(s1,s2)
+!     read(f,n)
+!     write(f,x)
+!     display(n)
+!     size(x)
+!     map(s1, s2, s3)
+!     open(name, mode)
+-     create(name, mode)
+!     close(f)
+!     integer(x)
+!     real(x)
+!     type(x)
+!     seek(f, n, type)
+!     string(x)
+!     numeric(x)
+!     reverse(s)
+!     image(x)
+      compile(s)
+!  allocate/deallocate backpatch lists
+!  tracing
+!     trace(n)
+!  unify error handling and messages

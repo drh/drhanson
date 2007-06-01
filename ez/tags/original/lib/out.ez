@@ -1,0 +1,363 @@
+# xxxxxxxxxxxxxxxxxxxxxx
+#  pcmd - parse a command line: return results in global table gt
+   procedure pcmd(line)
+      local i, rel
+   
+      gt.status = "ok"
+      gt.line1 = gt.line2 = gt.curlin
+      gt.nlines = rel = 0
+      line = pxpnd(line)
+      for (i = 1 ; i = getone(line, i, "line2") ; i += 1){
+         gt.nlines += 1
+         if (~(many(":!", line, i, i + 1)))
+            break
+         if (line[i!1] == "!")
+            rel = 1
+         gt.line1 = gt.line2
+         }
+      if (rel == 1)
+         gt.line2 = gt.line1 + gt.line2 - 1
+      if (gt.nlines == 1)
+         gt.line1 = gt.line2
+      if (gt.line2 < gt.line1)
+         gt.status = "error"
+      if (gt.status == "error")
+         return
+      return(i)
+   end
+   
+#  getone - get one complete line numer term - store in gt[s]
+   procedure getone(line, i, s)
+      local mul, istart
+      
+      istart = i
+      i = many(" \t", line, i)
+      i = getnum(line, i)
+      gt[s] = gt.num
+      for (;;){
+         i = many(" \t", line, i)
+         if (~many("+-", line, i, i + 1))
+            break
+         if (line[i!1] == "+")
+            mul = 1
+         else
+            mul = -1
+         i = many(" \t", line, i += 1)
+         if ((i = getnum(line, i)) == 0)
+            gt.status = "error"
+         if (gt.status = "ok")
+            gt[s] = gt[s] + gt.num * mul
+         }
+      if (gt[s] > gt.lstlin | gt[s] < 0)
+         gt.status = "error"
+      if (i <= istart)
+         return
+      return(i)
+   end
+   
+#  getnum - get one number from line[i]
+   procedure getnum(line, i)
+      local p, digits
+   
+      digits = "0123456789"
+      gt.num = gt.curlin
+      if (p = many(digits, line, i)){
+         gt.num = integer(line[i:p])
+         i = p
+         }
+      else if (line[i!1] == "."){
+         gt.num = gt.curlin
+         i += 1
+         }
+      else if (line[i!1] == "$"){
+         gt.num = gt.lstlin
+         i += 1
+         }
+      else if (many("/?", line, i, i+1)){
+         if ((p = optpat(line, i, "pat") + 1) & (gt.num = pfind(line[i!1])))
+            i = p
+         else
+            gt.status = "error"
+         }
+      return(i)
+   end
+   
+#  pfind - find a line with an occurence gt.pat or fail - c determines dir
+   procedure pfind(c)
+      local p, dir
+   
+      if (size(gt.pat) == 0)
+         return
+      if (c == "?")
+         dir = -1
+      else
+         dir = 1
+      for(p = gt.curlin + dir ; ; p += dir){
+         if (p <= 0)
+            p = gt.lstlin
+         else if (p > gt.lstlin)
+            p = 1
+         if (find(gt.pat, et[p]))
+            return(p)
+         if (p == gt.curlin)
+            break
+         }
+      return
+   end
+   
+#  pxpnd - expand command line allowing shortcut commands
+   procedure pxpnd(line)
+      local xline, p, t
+   
+      if (t = many("+-", line)){
+         if (many("0123456789", line, t))
+            t -= 1
+         for (p = 1; p < t; p += 1)
+            xline = (xline | "") || line[p!1] || "1"
+         line = xline || line[t:0]
+         }
+      return(line)
+   end
+   
+   procedure kludge()
+   end
+procedure cd(x) 
+   if (type(x) == "string")
+      root = root[x]
+   else if (type(x) == "table")
+      root = x
+   else 
+      cd("..")
+end
+
+procedure copy(t) local c, i
+   if (type(t) ~= "table") 
+      return (t)
+   else if (size(t) == 0)
+      return (table())
+   else {
+      for (i in t) 
+         c[i] = t[i]
+      return (c)
+      }
+end
+
+procedure load(x) 
+   read(getfile(x) || ".ez")() 
+end
+
+procedure ls(x) local i, s
+   if (type(x) == "string")
+      return (ls(root[x]))
+   if (~x) 
+      return (ls(root))
+   s = ""
+   for (i in x) 
+      s = s || string(i) || "\n"
+   return (s)
+end
+
+procedure max(x, y) 
+   if (x > y) 
+      return (x) 
+   else
+      return (y) 
+end
+
+procedure mkdir(s) 
+   root[s][".."] = root 
+end
+
+procedure min(x, y) 
+   if (x < y) 
+      return (x) 
+   else
+      return (y) 
+end
+
+procedure rm(x) 
+   remove(root, x) 
+end
+
+procedure vi(x) 
+   x = getfile(x)
+   system("vi "||x||".ez")
+   load(x) 
+end
+#  pcmd - parse a command line: return results in global table gt
+   procedure pcmd(line)
+      local i, rel
+   
+      gt.status = "ok"
+      gt.line1 = gt.line2 = gt.curlin
+      gt.nlines = rel = 0
+      line = pxpnd(line)
+      for (i = 1 ; i = getone(line, i, "line2") ; i += 1){
+         gt.nlines += 1
+         if (~(many(":!", line, i, i + 1)))
+            break
+         if (line[i!1] == "!")
+            rel = 1
+         gt.line1 = gt.line2
+         }
+      if (rel == 1)
+         gt.line2 = gt.line1 + gt.line2 - 1
+      if (gt.nlines == 1)
+         gt.line1 = gt.line2
+      if (gt.line2 < gt.line1)
+         gt.status = "error"
+      if (gt.status == "error")
+         return
+      return(i)
+   end
+   
+#  getone - get one complete line numer term - store in gt[s]
+   procedure getone(line, i, s)
+      local mul, istart
+      
+      istart = i
+      i = many(" \t", line, i)
+      i = getnum(line, i)
+      gt[s] = gt.num
+      for (;;){
+         i = many(" \t", line, i)
+         if (~many("+-", line, i, i + 1))
+            break
+         if (line[i!1] == "+")
+            mul = 1
+         else
+            mul = -1
+         if ((i = getnum(line, i)) == 0)
+            gt.status = "error"
+         if (gt.status = "ok")
+            gt[s] = gt[s] + gt.num * mul
+         }
+      if (gt[s] > gt.lstlin | gt[s] < 0)
+         gt.status = "error"
+      if (i <= istart)
+         return
+      return(i)
+   end
+   
+#  getnum - get one number from line[i]
+   procedure getnum(line, i)
+      local p, digits
+   
+      digits = "0123456789"
+      gt.num = gt.curlin
+      if (p = many(digits, line, i)){
+         gt.num = integer(line[i:p])
+         i = p
+         }
+      else if (line[i!1] == "."){
+         gt.num = gt.curlin
+         i += 1
+         }
+      else if (line[i!1] == "$"){
+         gt.num = gt.lstlin
+         i += 1
+         }
+      else if (many("/?", line, i, i+1)){
+         if ((p = optpat(line, i, "pat") + 1) & (gt.num = pfind(line[i!1])))
+            i = p
+         else
+            gt.status = "error"
+         }
+      return(i)
+   end
+   
+#  pfind - find a line with an occurence gt.pat or fail - c determines dir
+   procedure pfind(c)
+      local p, dir
+   
+      if (size(gt.pat) == 0)
+         return
+      if (c == "?")
+         dir = -1
+      else
+         dir = 1
+      for(p = gt.curlin + dir ; ; p += dir){
+         if (p <= 0)
+            p = gt.lstlin
+         else if (p > gt.lstlin)
+            p = 1
+         if (find(gt.pat, et[p]))
+            return(p)
+         if (p == gt.curlin)
+            break
+         }
+      return
+   end
+   
+#  pxpnd - expand command line allowing shortcut commands
+   procedure pxpnd(line)
+      local xline, p, t
+   
+      if (t = many("+-", line)){
+         if (many("0123456789", line, t))
+            t -= 1
+         for (p = 1; p < t; p += 1)
+            xline = (xline | "") || line[p!1] || "1"
+         line = xline || line[t:0]
+         }
+      return(line)
+   end
+   
+procedure cd(x) 
+   if (type(x) == "string")
+      root = root[x]
+   else if (type(x) == "table")
+      root = x
+   else 
+      cd("..")
+end
+
+procedure copy(t) local c, i
+   if (type(t) ~= "table") 
+      return (t)
+   else if (size(t) == 0)
+      return (table())
+   else {
+      for (i in t) 
+         c[i] = t[i]
+      return (c)
+      }
+end
+
+procedure ls(x) local i, s
+   if (type(x) == "string")
+      return (ls(root[x]))
+   if (~x) 
+      return (ls(root))
+   s = ""
+   for (i in x) 
+      s = s || string(i) || "\n"
+   return (s)
+end
+
+#  pcmd - parse a command line: return results in global table gt
+   procedure pcmd(line)
+      local i, rel
+   
+      gt.status = "ok"
+      gt.line1 = gt.line2 = gt.curlin
+      gt.nlines = rel = 0
+      line = pxpnd(line)
+      for (i = 1 ; i = getone(line, i, "line2") ; i += 1){
+         gt.nlines += 1
+         if (~(many(":!", line, i, i + 1)))
+            break
+         if (line[i!1] == "!")
+            rel = 1
+         gt.line1 = gt.line2
+         }
+      if (rel == 1)
+         gt.line2 = gt.line1 + gt.line2 - 1
+      if (gt.nlines == 1)
+         gt.line1 = gt.line2
+      if (gt.line2 < gt.line1)
+         gt.status = "error"
+      if (gt.status == "error")
+         return
+      return(i)
+   end

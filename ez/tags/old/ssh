@@ -1,0 +1,20 @@
+procedure sh()
+   local arg, cd, cmd, i;
+
+   root["."] = "";
+   root["."] = root[".."] = root;
+   cd = root;
+   for (write("% "); lin = read(); write("% ")) {
+      if (lin == "") next;
+      arg = ".";
+      lin = lin || " ";
+      cmd = lin[i=1:j=upto(" ",lin,i)];
+      i=many(" ",lin,j);
+      arg = lin[i:j=upto(" ",lin,i)];
+      display(1);
+      write(image(cmd), "\n");
+      write(image(arg), "\n");
+      write(image(cd), "\n");
+      write(image(cd[arg]), "\n");
+      };
+end;

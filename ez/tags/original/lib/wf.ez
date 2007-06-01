@@ -1,0 +1,27 @@
+procedure table(s)
+	local i, j, t
+
+	s = string(s)
+	i = 0
+	while (j = upto("\n", s)) {
+		t[i = i + 1] = s[1:j+1]
+		s = s[j+2:0]
+		}
+	if (size(s) > 0)
+		t[i+1] = s
+	return (t)
+end
+
+procedure wf(s)
+	local t, i, j
+
+	for (i = 1; i = upto(lcase, s, i); i = j) {
+		j = many(lcase, s, i)
+		if (t[s[i:j]])
+			t[s[i:j]] = t[s[i:j]] + 1
+		else
+			t[s[i:j]] = 1
+		}
+	for (i in t)
+		write(t[i], "\t", i, "\n")
+end

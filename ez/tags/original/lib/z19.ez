@@ -1,0 +1,40 @@
+xmax = 80
+ymax = 24
+
+keymap = table()
+addmap("\b",    procedure() curmov(cx-1, cy); delchr() end, keymap)  # backspace
+addmap("\012",  procedure() escape()         end, keymap)  # escape
+addmap("\015",  procedure() curmov(1, cy+1)  end, keymap)  # return
+addmap("\033A", procedure() curmov(cx, cy-1) end, keymap)  # up
+addmap("\033B", procedure() curmov(cx, cy+1) end, keymap)  # down
+addmap("\033C", procedure() curmov(cx+1, cy) end, keymap)  # right
+addmap("\033D", procedure() curmov(cx-1, cy) end, keymap)  # left
+addmap("\033H", procedure() curmov(1, 1)     end, keymap)  # home
+addmap("\033J", procedure() touch(1, ymax)   end, keymap)  # refresh
+addmap("\033L", procedure() inslin()         end, keymap)  # insert line
+addmap("\033@", procedure() inschr()         end, keymap)  # insert char
+addmap("\033M", procedure() dellin()         end, keymap)  # delete line
+addmap("\033N", procedure() delchr()         end, keymap)  # delete char
+addmap("\033P", procedure() mark()           end, keymap)  # mark
+addmap("\033Q", procedure() pick()           end, keymap)  # pick
+addmap("\033R", procedure() put()            end, keymap)  # put
+addmap("\033S", procedure() scnmov( 7)       end, keymap)  # +lines
+addmap("\033T", procedure() scnmov(-7)       end, keymap)  # -lines
+addmap("\033U", procedure() scnmov( ymax)    end, keymap)  # +pages
+addmap("\033V", procedure() scnmov(-ymax)    end, keymap)  # -pages
+addmap("\033W", procedure() mode = 1 - mode  end, keymap)  # insert mode
+addmap("\033/", procedure() search(+1)       end, keymap)  # +search
+addmap("\033?", procedure() search(-1)       end, keymap)  # -search
+addmap("\177",  procedure() exec()           end, keymap)  # exec
+
+for (i = 32; i < 128; i = i + 1)
+   addmap(ascii[i+1!1], procedure(c) overstrike(c) end, keymap)  # overstrike
+remove(root, "i")
+
+procedure error(s) 
+   write(ascii[8!1]) 
+end
+
+procedure init(s) 
+   write("\033x6") 
+end

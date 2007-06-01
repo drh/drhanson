@@ -1,0 +1,20 @@
+% macros for use with loom'ed program documentation
+
+\input macros
+\newcount\secno \secno=0
+\def\section#1\par{\advance\secno by1\bigskip
+  \message{#1}\noindent{\bf\the\secno.\enspace#1}}
+\displayindent=2em
+\newwrite\inx
+\immediate\closeout\inx
+\immediate\openout\inx=index.dat
+\def\index(#1,#2,#3){\immediate\write\inx{#1:#2:#3:\the\secno}}
+\def\beginprogram{\program\catcode`\%=14\parindent=2em\displayindent=2em}
+\def\beginindex{\par\section Index. \par
+The numbers in this index refer to the section numbers
+in which the indexed identifiers appear.\par\nobreak\bigskip\nobreak
+  \begindoublecolumns
+  \parindent=0pt \parskip=0pt plus.5pt \everypar={\hangindent=1em}
+  \exhyphenpenalty=10000 \rightskip=0pt plus2em \catcode`\_=\other}
+\def\endindex{\enddoublecolumns}
+\def\newletter{\medbreak\hangindent=1em}

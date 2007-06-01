@@ -1,0 +1,962 @@
+.de M
+.nr PQ \\n(.f
+.if !"\\$1"" \\$3\\fM\\$1\\f\\n(PQ\\$2
+.if "\\$1"" .ft M
+..
+.de PS
+.DS I 3n
+.M
+.if !'\\$1'' .ta \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+.if '\\$1'' .ta 3n +3n +3n +3n +3n +3n +3n +3n
+..
+.de PE
+.ss
+.R
+.DE
+..
+.ds S \fI\s-2EZ\s0\fP
+.ds EZ \fI\s-2EZ\s0\fP
+.ds UN U\s-2NIX\s0
+.de SS
+.br
+.ps \\$1
+.nr PS \\$1
+.vs \\$2p
+.nr VS \\$2
+..
+.ds Y \s-2Y\s0
+.ds Un U\s-2NIX\s0
+.ds t 	
+.TR 84-2
+.DA "January 1984"
+.GR MCS-8102298 MCS-8302398
+.TL
+Integrating Operating Systems and Languages
+.AU
+Christopher W. Fraser
+David R. Hanson
+.AB
+\*(EZ is a software system 
+that integrates many of the
+traditional facilities of operating systems and languages
+into a single system intended as the
+complete environment on personal computers.
+This integration is accomplished by casting
+these facilities as features of a high-level
+string-processing language with late binding times,
+execution-time scope rules,
+a `persistent' virtual memory,
+and a type system in which conventionally distinct types are
+treated as single types.
+As a result, language operations provide many conventional
+operating systems services.
+For example, strings subsume text files
+and associative arrays subsume directories.
+This paper describes \*(EZ and an editor written
+in \*(EZ that displays the merits of
+the linguistic approach to integrating operating
+system and language features.
+.AE
+.NH
+Introduction
+.PP
+Personal computer environments 
+increasingly integrate traditionally distinct services.
+For example, the Xerox Star uses one universal `move' command to move 
+text in a document, graphics in a figure, 
+and files in a directory.[.star user interface.]
+This integration usually appears at the level of the user interface,
+but it is also appropriate to integrate the basic services
+from which programming environments are built.
+.PP
+Operating systems and programming languages provide these basic services.
+Programming languages provide basic access to the CPU and main memory.
+Operating systems manage processes, devices, and file systems.
+Traditionally, programming languages access operating
+system services through system calls,
+and users access them through command languages.
+.PP
+Operating systems and programming languages solve different problems,
+but, increasingly, they use similar concepts [.jones gap.]
+and thus offer redundant features.
+For example, operating systems with a hierarchical directory system
+and programming languages with block structure or nested classes 
+[.smalltalk goldberg robson.]
+both offer a tree-structured symbol table.
+This redundancy wastes computer, programmer, and user resources.
+.PP
+This paper describes \*(EZ,
+a software system that integrates operating systems and programming languages
+by casting their facilities as linguistic aspects of a single system.
+\*(EZ is being developed under \*(UN on a VAX-11/780, but it is intended to
+be the complete environment on personal computers.
+Section 2 describes \*(EZ,
+Section 3 describes a universal \*(EZ editor
+that displays the merits of integrating traditionally distinct features,
+and Section 4 surveys possibilities for further integration
+of languages and operating systems.
+.NH
+\*(EZ
+.PP
+\*(EZ [.fraser hanson 1983.]
+is designed to provide high-level language features
+that subsume facilities traditionally
+provided by operating systems.
+This goal is accomplished by using late binding times,
+execution-time scope rules,
+and a type system in which conventionally distinct types are
+treated as single types.
+The result is a system in which objects 
+that are manipulated by utilities in traditional operating systems
+are manipulated by operators and control structures in \*(EZ.
+.PP
+As a programming language,
+\*(EZ is a high-level string-processing language
+derived from SNOBOL4, SL5,[.sl5 procedure mechanism.] and Icon .[.iconref.]
+It has most of the basic attributes of those languages,
+such as concise, expressive constructs, run-time flexibility,
+untyped variables, heterogeneous structures, and automatic type conversion.
+Strings are treated as scalars, and there are
+numerous `mid-level' string operations similar to those in Icon,
+but pattern matching operations are not yet provided.
+.PP
+With a few exceptions,
+\*(EZ's control abstractions are identical to those
+found in traditional languages.
+Expressions usually compute values,
+but, as in Icon, some expressions may fail to yield values.
+The presence or absence of values drives control structures;
+for example, in the C-style
+.B for
+loop
+.PS
+for (i = 1; i <= 10; i = i + 1)
+	sum = sum + x[i]
+.PE
+the relational operator,
+.M <= ,
+returns its right operand only if
+the relation is satisfied.
+The absence of a value terminates the loop,
+in this case, when
+.M i
+exceeds 10.
+For some operators, such as assignment, the absence of a value
+inhibits the execution of the operation.
+.PP
+The \*(EZ language resides in a `persistent' environment
+much like an APL workspace in which
+values exist until changed.
+Unlike systems that access workspaces explicitly,[.persistent heap.]
+the persistence in \*(EZ is implicit and a part of the language,
+much as in the Gem system.[.irons graphics software 1976.]
+This is one characteristic that distinguishes \*(EZ from
+various LISP environments, which access traditional operating system
+services through functions or other explicit mechanisms.[.sandewall lisp.]
+In the development version,
+\*(UN provides the necessary environmental support, but
+in a personal computer environment,
+the entire computer and its peripherals are devoted
+to supporting the \*(EZ environment.
+The implementation assumes responsibility for managing
+primary and secondary memory, including garbage collection.
+.PP
+\*(EZ supports four basic types of values:
+numerics, strings, procedures, and tables.
+Numerics include integers and reals, which serve their conventional purposes.
+Strings are sequences of characters and have arbitrary length.
+Tables are heterogeneous one-dimensional arrays that can
+be indexed by and can contain arbitrary values.
+Procedures are data objects that contain executable code.
+.PP
+Since values persist until changed,
+assignment of a string to a variable
+provides the same facility as creating a `file' in a
+traditional operating system.
+For example,
+.PS
+message = "I'll return in 10 minutes"
+.PE
+assigns the indicated string to
+.M message .
+In traditional terms, the variable
+.M message
+constitutes the `file name' and the string
+.M
+"I'll return in 10 minutes"
+.R
+is the `contents' of the `file'.
+This `file' can be printed by typing
+.PS
+message
+.PE
+since statements outside procedures are executed immediately
+by the interpreter and statements consisting of an expression
+return the value of the expression.
+Likewise, the number of characters in this `file' is printed in
+response to
+.PS
+size(message)
+.PE
+The built-in function
+.M size
+returns the size of its argument, which is the number of characters
+for strings.
+Similarly, if
+.M oldmessage
+contains the previous value of
+.M message ,
+.PS
+message ~= oldmessage
+.PE
+prints the previous value if it differs from the current value.
+Substring operations provide `random access' facilities.
+For example,
+.PS
+message[16:18]
+.PE
+prints
+.M 10 .
+As these trivial examples illustrate,
+strings and operators in \*(EZ subsume
+files and their associated utility programs in traditional operating systems.
+.PP
+Tables provide an associative array facility similar
+to that provided by tables in SNOBOL4 and Icon and by arrays in
+\fBawk\fP.[.awk.]
+Tables are created automatically as necessitated by subscripting.
+Tables, like other values, persist until changed and thus
+subsume directories in traditional operating systems.
+For example,
+.PS
+paper["title"] = "Integrating Operating Systems and Languages"
+paper["authors"] = cwf || "\en" || drh
+.PE
+creates a table representing this paper and establishes it as the value of
+.M paper .
+The
+.M ||
+operator is string concatenation.
+The notation \fIe.id\fP is equivalent to \fIe\fR["\fIid\^\fR"],
+permitting \*(EZ tables to subsume records in
+traditional programming languages,
+and the example above is equivalent to
+.PS
+paper.title = "Integrating Operating Systems and Languages"
+paper.authors = cwf || "\en" || drh
+.PE
+Table indices and values can be of arbitrary types.
+For example,
+.PS
+paper[1].heading = "Introduction"
+paper[1].body = "This paper describes ...
+paper[1].top = paper
+.PE
+creates a table for Section 1 of this paper,
+and establishes it as the value associated with index
+.M 1
+in
+.M paper .
+In addition, the value associated with
+.M top
+in the section 1 table is the table
+for entire paper.
+Arbitrary cyclical structures, such as this example, are permitted
+and are, in fact, frequently used in \*(EZ.
+.PP
+As in the case of strings,
+\*(EZ tables, operators, and control structures
+provide the facilities of directories and directory utilities
+found in operating systems.
+For example, listing the contents of a table
+corresponds to listing the names in a directory.
+Whereas in most operating systems, this service is
+provided by a `list directory' program,
+it can be provided in \*(EZ with a simple loop.
+For example,
+.PS
+for (i in paper)
+	write(i)
+.PE
+sequences through the table given by
+.M paper ,
+repeatedly assigns the indices of the table to
+.M i ,
+and executes the body of the loop,
+which in this example simply prints the index value
+on the standard output.
+Tables are as large as necessary to accommodate their contents.
+Entries are removed by the built-in function
+.M remove .
+For example,
+.PS
+remove(paper[1], "top")
+.PE
+removes the value associated with
+.M top
+in the table for Section 1 constructed above.
+.M remove
+provides the `delete file' facility of operating systems.
+.PP
+Tables can be used to construct a hierarchical `file system',
+such as that provided by \*(UN.
+In the \*(UN file system, directories contain files
+and other directories, the entry ``.'' refers to
+the directory itself, and the entry ``..'' refers to
+the parent directory.
+The basic operations and utilities can be provided as \*(EZ
+procedures.
+A `working directory', which is the focus of these operations,
+can also maintained as the value of the global variable
+.M WorkingDirectory .
+For example,
+.PS
+procedure mkdir(name)
+	WorkingDirectory[name][".."] = WorkingDirectory
+	WorkingDirectory[name]["."] = WorkingDirectory[name]
+end
+.PE
+creates a new directory named
+.M name
+and establishes the
+.M
+"."
+.R
+and
+.M
+".."
+.R
+entries.
+.PS
+procedure chdir(name)
+	WorkingDirectory = WorkingDirectory[name]
+end
+.PE
+changes the working directory, if the desired directory exists.
+If it does not exist, the value of the right-hand side of the assignment
+does not yield a value, so the assignment is not performed.
+A list of the names in a directory or in the working directory is returned by
+.M ls :
+.PS
+procedure ls(name) local i, list
+	if (name) {
+		for (i in name)
+			list = list || " " || i
+		return (list)
+		}
+	return (ls(WorkingDirectory))
+end
+.PE
+\*(EZ tables provide a richer mechanism than that provided
+by most operating systems.
+For example, the
+.M
+"."
+.R
+and
+.M
+".."
+.R
+entries describe a static structural relationship
+among directories, but dynamic relationships, such as the most
+recent path through a hierarchy, are also useful.
+A `recent path' facility can be provided by using another
+table entry, say
+.M path ,
+to record the most recent action of
+.M chdir :
+.PS
+procedure chdir(name)
+	if (WorkingDirectory[name]) {
+		WorkingDirectory[name]["path"] = WorkingDirectory
+		WorkingDirectory = WorkingDirectory[name]
+		}
+end
+.PE
+.PP
+Automatic conversions between data types obviate
+the need for most `conversion' utilities found in operating systems.
+Numeric operators convert their operands to integers
+or reals as necessary.
+Similarly, operands of string operators are converted to strings
+as necessary.
+For some operators,
+the operation performed depends on the type of the operands.
+For example,
+the relational operators perform lexical comparison if both
+operands are strings and
+numeric comparison (with the appropriate conversions)
+if either operand is numeric.
+.PP
+Conversions between tables and strings and between
+procedures and strings are also provided.
+For example,
+tables are converted to strings by concatenating their elements.
+Thus, for example,
+simply typing the name of a table displays its contents.
+Procedures are converted to strings by returning their source code.
+Simply typing the name of a procedure, therefore,
+displays its code.
+Strings are converted to procedures by compiling them.
+Thus,
+.PS
+for (i in work)
+	work[i]()
+.PE
+executes the values in the table
+.M work ,
+compiling those values that are not procedures.
+In a sense, compilation is simply an optimization in \*(EZ.
+.PP
+Scope rules, which dictate the interpretation of free identifiers,
+depend on the contents of tables interrogated by the compiler.
+Unlike most other systems, these `symbol tables' are \*(EZ tables,
+which can be manipulated by the user.
+As illustrated in the procedure
+.M ls ,
+given above,
+identifiers may be declared
+.M local
+and their use is restricted to the associated
+procedure in the traditional manner.
+An interpretation of free identifiers is sought by
+searching the table that is the current value of the variable
+.M root
+for an index value lexically equal to the identifier.
+Thus, the assignment
+.PS
+message = "I'll return in 10 minutes"
+.PE
+is equivalent to
+.PS
+root["message"] = "I'll return in 10 minutes"
+.PE
+If the identifier is not found in
+.M root ,
+the compiler searches the chain of tables given by
+.M 
+root[".."]\fR,
+.M 
+root[".."][".."]\fR,
+and so on until the identifier is found or a table without a
+.M
+".."
+.R
+entry or whose
+.M
+".."
+.R
+entry is not a table is encountered.
+If this search fails to locate the identifier,
+it is entered in
+.M root .
+.PP
+This interpretation of identifiers is under complete control
+of the user.
+By changing the value of
+.M root
+and altering the path given by the
+.M
+".."
+.R
+entries, rules such as the inheritance rules in Smalltalk [.smalltalk.],
+the `search lists' in \*(UN,
+and the information-hiding aspects of modules and
+.M own
+variables can be obtained.
+For example, the following function
+is used in the development version of \*(EZ
+to `load'\*(emcompile and execute\*(emprogram
+fragments from external files into specific directories,
+creating the directories if necessary.
+.PS
+procedure load(name)
+	if (~WorkingDirectory[name])
+		mkdir(name)
+	root = WorkingDirectory[name]
+	read(name || ".ez")()
+	root = WorkingDirectory[".."]
+end
+.PE
+.M read
+returns the contents of external file indicated by its argument as an
+\*(EZ string.
+.PP
+The scope rules can also be used to hide information.
+For example,
+.PS
+root = ["previous":root]
+.PE
+assigns a new table to
+.M root
+that associates the previous value of
+.M root
+with the entry
+.M previous .
+The absence of a
+.M
+".."
+.R
+entry forces free identifiers to be associated with the new table.
+The subsequent input
+.PS
+s = 0
+previous.random = procedure (n)
+	s = (s*12621 + 21131)%10000
+	return (s*n/10000 + 1)
+end
+.PE
+defines a procedure that generates a sequence
+of pseudo-random numbers in the range 1 to
+.M n
+using the linear congruence method.
+The procedure is made accessible by placing it in the original table,
+but the table containing the state variable
+.M s
+is inaccessible except for the references within
+.M random .
+Other variations, such as saving the table containing
+.M s
+so that it can be changed, are also possible.
+The assignment
+.PS
+root = previous
+.PE
+resets
+.M root
+to its original value.
+.PP
+The remaining features of \*(EZ are similar to those
+in traditional languages and the string-processing features
+are similar to those in Icon.
+\*(EZ includes the usual control structures
+and a repertoire of built-in values, which includes
+frequently used constants and built-in procedures.
+The reference manual [.ezref.] contains a complete
+description of \*(EZ's syntax, semantics, built-in values,
+and usage, and the implementation is described in
+Ref. {.hanson fraser 1983.}.
+.NH
+An \*(EZ Editor
+.PP
+Some implications of \*(EZ's model
+are illustrated by an editor for \*(EZ structures
+that is written in \*(EZ.
+Just as \*(EZ's built-in operators generalize traditional operators,
+the editor generalizes traditional editing functions.
+Thus type and semantic integration are carried out of the implementation
+and into the systems and applications software written in \*(EZ.
+.PP
+The editor looks like a conventional screen editor 
+[.meyrowitz compsur 1982 part2.]
+based on the Irons model.[.irons cacm 1972.]
+It displays a screen of text 
+and updates it after each command so that what you see is what you get.
+Hitting cursor keys moves a cursor around the screen,
+and hitting printable characters replaces the character at the cursor
+with the input character.
+A small set of special function or control keys invoke other editing commands.
+Some insert and delete characters and lines.
+Others scroll the screen forward or backward
+by a fixed distance or until a search string is found.
+Still others copy text between the screen and a buffer.
+Ultimately, menus and a mouse should replace the control and cursor keys 
+required by the development system.
+.PP
+Like EMACS [.stallman text manipulation.],
+the editor's command dispatcher is driven by a decoding tree
+implemented as nested \*(EZ tables.
+The editor reads each character and looks it up in a decoding table.
+If the table entry is an \*(EZ procedure,
+the editor has recognized a complete command,
+which it passes to the procedure found.
+If the table entry is another table,
+the editor recursively reads another character
+and looks it up in this sub-table.
+This accommodates users that like some multi-character commands
+and keyboards that generate several characters for some keystrokes.
+.PP
+The creation of this decoding tree illustrates the use of procedures as data.
+A 20-line \*(EZ procedure 
+.M addmap(s,p,t) 
+changes decoding tree 
+.M t 
+to bind command string 
+.M s 
+to procedure 
+.M p .
+For example,
+.PS
+addmap("\eb", procedure() curmov(cx-1, cy); delchr() end, Decoder)
+.PE
+changes the decoding table 
+.M Decoder
+so that a backspace command character
+.M
+\fR(\fP"\eb"\fR)
+invokes the procedure
+.PS
+procedure() curmov(cx-1, cy); delchr() end
+.PE
+which calls two other \*(EZ procedures
+that backspace the cursor and delete one character.
+This fragment is a value of type procedure.
+It is a nameless procedure `constant' just as 
+.M
+"abc"
+.R 
+is a nameless string constant.
+Similarly,
+.PS
+procedure overstrike()
+	...
+end
+for (i = 32; i < 128; i = i + 1)
+	addmap(ascii[i+1!1], overstrike, Decoder)
+.PE
+arranges for the printable command
+characters (\s-2ASCII\s0 32-127) to invoke procedure
+.M overstrike ,
+which substitutes the command character for the character at the cursor.
+.PP
+Where conventional editors edit only text files,
+the \*(EZ screen editor edits all \*(EZ values.
+Type integration helps here by representing all values
+as integers, reals, strings, procedures, and tables.
+Actually, the editor needs to manage only two types, strings and tables,
+because of \*(EZ's automatic conversions from numbers and procedures
+to strings.
+.PP
+All types share one user interface.
+A data-independent front end manages the display
+and translates the user's commands into calls on
+a small set of primitive editing routines that actually manipulate the data.
+When invoked, the front end examines its argument
+and selects the string or table interface accordingly.
+These routines print, change, insert, and delete
+one line in a string or one entry in a table.
+This technique adapts to edit a wide range of types [.fraser cacm 1980.],
+and it also allows tailoring of the editor to sub-abstractions
+(e.g. relational databases represented as tables of tables).
+.PP
+The editor treats numbers, strings,
+and procedures much as a conventional editor treats text files,
+performing conversions to strings as necessary.
+At the end of the editing session,
+it converts the edited value back to type of the original value.
+.PP
+The editor treats tables by allowing the user
+to edit the table's keys as though they were text.
+It displays an image of the keys,
+and it changes them to reflect the user's changes to the screen.
+For example, when editing a table with keys 
+.M 
+"name"\fR,
+.M
+"address"\fR,
+and
+.M
+"phone"\fR,
+the editor displays
+.PS
+name
+address
+phone
+.PE
+Deleting a line on the screen deletes a table entry,
+inserting a line on the screen inserts a new entry in the table,
+and changing a line on the screen changes the key for a key-value pair.
+For example,
+deleting the second line removes the table's address field,
+inserting a line
+.M
+"office phone"
+.R
+adds a new (blank) field to the table,
+and inserting
+.M
+"home "
+.R
+at the beginning of the last line
+changes the name (but not the value) of the existing
+.M
+"phone"
+.R
+field.
+Because tables subsume conventional file system directories,
+the editor subsumes traditional file system commands
+to list directories and to remove, create, and rename files.
+.PP
+Commands too type-specific for the front end
+use a trapdoor into the data interfaces.
+The table primitives interpret an `enter' command 
+that recursively invokes the editor on the value
+associated with the key on the line holding the cursor.
+For example, invoking the enter command
+on the line holding
+.M
+"name"
+.R
+shown above edits the value associated with
+.M
+"name"\fR.
+This action might display
+.PS
+John Doe
+.PE
+which can now be edited as a string.
+The change takes effect as soon as the user returns
+to editing the keys.
+This enter command makes it easy to walk an arbitrary graph structure 
+and inspect the nodes along the way.
+It also makes the editor useful for post-mortem debugging.
+.PP
+More complicated uses of the enter command are routine.
+They are hard to fully appreciate without an interactive demonstration,
+but a paper trace can suggest their use.
+Consider the implementation of the editor itself.
+Its procedures are currently organized
+into six tables arranged hierarchically:
+.KS
+.sp
+.TS
+center ;
+c c c .
+	built-in procedures
+.sp .4i
+	library procedures
+.sp .4i
+	editor procedures
+.sp .4i
+string interface	table interface	terminal interface
+.TE
+.KE
+The
+.M
+".."
+.R
+entry of each table points to the table immediately above it,
+so the library procedures may use the built-ins,
+and the editor procedures may use both.
+.PP
+If 
+.M root
+is set to the table holding the editor procedures, the \*(EZ top-level command
+.PS
+ed(root)
+.PE
+runs the editor on the table holding the editor.
+This displays the names of the interface tables
+and the names of the editor's procedures and globals:
+.PS
+\\..
+String
+Table
+Terminal
+addmap
+curmov
+\fRetc.\fP
+.PE
+Positioning the cursor on the fourth line and
+hitting the enter button now edits the terminal interface table.
+This displays
+.PS
+\\..
+Decoder
+error
+init
+xmax
+ymax
+.PE
+Moving to the last line and
+hitting the enter button
+now edits the variable holding the number of lines per screen.
+This displays
+.PS
+24
+.PE
+Typing a smaller number now will cause the editor to use fewer lines,
+which may speed screen rewrites in some environments.
+The change takes effect as soon as the user returns from editing 
+.M ymax
+to editing
+.M Terminal .
+.PP
+Similarly, users can customize commands by editing the
+.M Decoder
+table above.
+To change, for example, 
+the backspace command to backspace without deleting anything,
+the user first hits the enter button on the line holding
+.M Decoder
+above.
+This displays
+.M Decoder 's
+keys, which are the \s-2ASCII\s0 characters that begin legal commands.
+Some of these are unprintable,
+but the editor displays them with a printable escape sequence.
+Hitting the enter button from the line holding the backspace sequence
+now edits the backspace procedure.
+This displays
+.PS
+procedure() curmov(cx-1, cy); delchr() end
+.PE
+The user positions the cursor 
+and hits the `delete character' button
+enough times to remove the call on
+.M delchr .
+The change takes effect as soon as the user returns 
+from editing this procedure to editing
+.M Decoder .
+The conversion back to procedure is automatic.
+As this example illustrates, \*(EZ code tends to be less permanent
+than code in traditional systems.
+The invertible conversion between source and object code
+makes it easy to change code and provide immediate feedback.
+.PP
+These two examples illustrate a bonus of type integration.
+Under conventional systems,
+changing the screen size, command bindings, or commands themselves,
+normally requires special editor commands.
+Under \*(EZ,
+there are few enough datatypes that it is feasible
+to provide editors that can change such parameters directly.
+The user learns to navigate
+structures rather than learning to operate commands.
+Where, for example, 
+the \*(UN manual describes many more commands than structures,
+the \*(EZ manual describes fewer commands and more structures.
+Since structures are described declaratively
+where commands are described procedurally,
+this may yield a simpler system.
+.PP
+Another simple function with wide implications is the `execute' command,
+which executes the current line as \*(EZ code
+and inserts the result after the current line.
+For example, typing
+.PS
+ascii[upto("a", ascii)!26]
+.PE
+onto a blank screen and hitting the execute button converts
+the string to a procedure, executes it, and leaves
+.PS
+ascii[upto("a", ascii)!26]
+abcdefghijklmnopqrstuvwxyz
+.PE
+on the screen.
+Further, code can be re-executed.
+For example, inserting
+.M
+"lcase="
+.R
+before the first character above and hitting the execute button again sets
+.M lcase
+to the lower-case letters.
+This facility supports error correction 
+and incremental development of complex expressions.
+.PP
+Text can be executed regardless of its origin,
+which offers primitive single-stepping.
+For example, the editor function
+.M inited
+creates and loads the sub-directories described above.
+Thus typing 
+.PS
+inited
+.PE
+on a blank screen and hitting the execute button leaves
+.PS
+inited
+procedure inited()
+	load("Edit")
+	chdir("Edit")
+	load("String")
+	load("Table")
+	load("Terminal")
+end
+.PE
+on the screen.
+This function can now be executed incrementally
+by positioning the cursor on its various lines
+and hitting the execute button.
+The editor can already examine arbitrary \*(EZ structures.
+With better control over the execution process,
+it is expected to subsume the remainder of a conventional
+debugger as well.[.blit debugger.]
+.PP
+At this writing,
+values generated by the execute command are converted to strings for insertion,
+so the execute command is used mainly with the string editor.
+Ultimately, the editor should allow users to assemble tables too.
+For example, it should be possible to assemble a table by combining 
+items hand-picked from an existing table with items returned by \*(EZ code.
+The editor should allow construction of arbitrary \*(EZ structures 
+`by hand' or with help from \*(EZ code.
+.PP
+The editor is still new,
+but it appears likely to become \*(EZ's primary user interface.
+The current fetch-execute loop may be used only to bootstrap up the editor.
+The use of an editor as the main user interface has been proposed before
+[.irons texas, scofield proposal, wood tools.],
+but it has yet to be fully exploited [.meyrowitz compsur 1982 part2.].
+.NH
+Conclusions
+.PP
+The current version of \*(EZ represents a partial
+integration of many of the traditional facilities of
+operating systems and languages.
+For example, using the set of system calls for \*(UN,
+given in \(sc2 of the \*(UN programmer's manual ,[.unix manual.]
+as representative of the services provided by a modern operating system,
+\*(EZ provides all of the file system services listed that are
+appropriate in a personal computing environment.
+.PP
+Important omissions from the list of operating system services include
+processes, device control, and asynchronous events, such
+as interrupts.
+Current research is directed toward
+satisfying these omissions by additional
+\*(EZ language features.
+For example, it is intended to use
+coroutines like those in SL5 [.sl5 procedure mechanism.] to
+execute asynchronous processes.
+Coroutines will also be used to respond to asynchronous events.
+.PP
+The most challenging issues yet to be addressed
+at the \*(EZ language level are those related to interactive device control.
+The proper linguistic encapsulation of primary and secondary memory
+is more obvious than a similar encapsulation of
+interactive devices, such as keyboards and displays or higher-level
+representations such as windows.
+The difficulty is that interactive devices are under
+the direct control of the user whereas storage devices
+can be treated as `black boxes'.
+One possibility is to 
+treat the keyboard and display as strings that grow automatically
+as input is typed or as output is generated.
+This approach would automatically maintain a history
+of the interaction.
+Alternatives based on coroutines logically connected to interactive devices
+are also under consideration.
+.PP
+Networks also present a challenging problem.
+The central issue is deciding where to locate
+the components of the \*(EZ system.
+For example, \*(EZ should suit personal computing environments
+based on disk-less workstations connected to file servers.
+The file server would present each workstation with its own secondary storage.
+\*(EZ would run on each workstation and cache heavily used pages.
+This configuration would provide a high-level software environment
+on relatively inexpensive hardware,
+such as Bell Blits [.pike tog 1983.] connected
+to a typical file server via low-speed serial interfaces like 9600 baud lines.
+Current work focuses on
+language design and on measuring \*(EZ's behavior
+to determine how to best partition \*(EZ in
+a distributed personal computing environment.
+.sp
+.LP
+\fIAcknowledgments\fP.
+John Bolding implemented several components
+in the development version of \*(EZ.
+.[]

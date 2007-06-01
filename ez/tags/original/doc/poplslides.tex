@@ -1,0 +1,254 @@
+\input macros
+\magnification=\magstep4
+\voffset=1 true in
+\font\bigrm=amr10 at 12 pt \font\eightit=ami10 at 8pt
+\font\footrm=amr8 at 8 true pt \font\pt=amtt10
+\pageno=0 \footline={\footrm Slide \folio\hfill POPL\hfill\today}
+\def\Bullet{\bigskip$\bullet$\enspace\enspace}
+\def\NewPage{\vfill\eject}
+\def\EZ{{\it EZ\/}}
+\catcode`\^^I=\active
+\def^^I{\hskip .4 true in}
+\parindent=0pt \catcode`\~=12
+\def\center{\leftskip=0pt plus 1fil \rightskip=\leftskip \parfillskip=0pt}
+\def\program{\begingroup\medskip\pt\catcode`\{=12 \catcode`\}=12}
+\def\endprogram{\endgroup}
+{\obeylines\center
+{\bigrm High-Level Language Facilities
+for Low-Level Services}
+\vskip 1 true in
+Christopher W. Fraser
+
+Department of Computer Science
+The University of Arizona
+\vskip .8 true in
+David R. Hanson
+
+Department of Electrical Engineering
+and Computer Science
+Princeton University
+}
+\NewPage
+\obeylines
+\centerline{\bigrm High-Level Computing Environment}
+\Bullet Integrate:
+		languages and operating systems
+		programming and command languages
+		editors and command languages
+		editors and debuggers
+
+\Bullet Raise the level of interaction
+		avoid intrusion of irrelevant technology
+		e.g., primary and secondary memory
+
+\Bullet Develop:
+		environments for personal computers
+		environments for {\it future\/} languages
+		very high-level programming languages
+
+\Bullet Approach is {\it language-based}
+		``system services'' cast as language facilities
+\NewPage
+\centerline{\bigrm The \EZ\ Language}
+\Bullet A high-level string-processing language
+		ancestors are SNOBOL4, SL5, Icon
+
+\Bullet Basic linguistic attributes:  run-time flexibility
+		late binding times
+		dynamic typing, automatic conversions
+		heterogenous structures
+
+\Bullet A ``persistent'' memory
+		values exist until changed
+
+\Bullet Few types: numeric, string, table, procedure
+
+\Bullet Strings are files
+\program
+		note = "I'll return soon"
+\endprogram
+\smallskip
+		{\pt note} is the ``file name''
+		{\pt "I'll return soon"} is the ``contents''
+
+\Bullet Tables (associative arrays) are directories
+\program
+		paper["title"] = "High-Level ...
+		paper["authors"] = cwf || "$\backslash$n" || drh
+\endprogram
+\medskip
+		tables created automatically by subscripting
+		{\pt e.id} is equivalent to {\pt e["id"]}
+\NewPage
+\centerline{\bigrm Procedures}
+\Bullet Procedure ``declarations'' are assignments
+\program
+		procedure ls(t) local i, s
+			s = ""
+			for (i in t)
+				s = s || "," || i
+			return (s[2:0])
+		end
+\endprogram
+\medskip
+		is equivalent to
+\program
+		ls = procedure (t) local i,s ...\ end
+\endprogram
+
+\Bullet Conversion of procedure to string yields code
+		value of {\pt ls} is {\pt "procedure ls(t) ...\ end"}
+
+\Bullet Conversion of string to procedure is compilation
+\program
+		for (i in work)
+			work[i]()
+\endprogram
+\NewPage
+\centerline{\bigrm Resumption Points}
+\Bullet Resumption points identify executable fragments
+\begingroup\medskip\pt
+	procedure decode(cmd, keymap)
+		local c, s, t
+
+		$^1$
+		$^2$s = ""
+		$^3$t = keymap
+		$^4$while ($^5$c = cmd[1!1]) $\{$
+			$^6$s = s || c
+			$^7$cmd = cmd[2:0]
+			$^8$if ($^9$type(t[c]) == "procedure") $\{$
+				$^{10}$t[c](s)
+				$^{11}$return $^{12}$(1)
+				$\}$
+			else $^{13}$if ($^{14}$type(t[c]) ~= "table")
+				$^{15}$return $^{16}$
+			$^{17}$t = t[c]
+			$\}$
+		$^{18}$
+	end
+\endprogram
+\NewPage
+\centerline{\bigrm Extracting Resumption Point Code}
+\Bullet {\it Subscripting\/} a procedure:
+		yields resumption point code
+\medskip
+		{\pt decode[6]} yields {\pt "s = s || c"}
+
+\Bullet {\it Substringing\/} a procedure:
+		yields ``closest'' resumption point code
+\program
+		decode[find("type", decode)!1]
+		decode[135!1]
+\endprogram
+\medskip
+		yields {\pt 'type(t[c]) == "procedure"'}
+		substrings are ``widened''
+
+\Bullet Source code can be modified
+\program
+		decode[10] = "if (~t[c](s)) return"
+\endprogram
+\medskip
+		changes {\pt decode} to
+\program
+		procedure decode (cmd, keymap)
+			...
+			if (type(t[c]) == "procedure") {
+				\begingroup\sl if (~t[c](s)) return\endgroup
+				return (1)
+			...
+\endprogram
+\medskip
+		re-compilation is automatic
+\NewPage
+\centerline{\bigrm Procedure Activations}
+\Bullet Procedure {\it activations\/} are \EZ\ {\it tables}
+		indices include:
+			formals, locals
+			state information
+
+\Bullet Explicit activation creation:
+		conversion from procedure to table
+		explicit table construction
+\program
+		procedure decode(cmd, keymap) ...\ end
+		d = table(decode)
+\endprogram
+\medskip
+		{\pt for (i in d) s = s || " " || i}
+		set {\pt s \rm to \pt " cmd keymap c s t ..."}
+
+\Bullet Invoking activations
+\smallskip
+\line{\hss\vbox{\halign{\pt#\hfil\hskip .5 true in&\pt#\hfil\cr%
+d("abcd", z19map)&d.cmd = "abcd"\cr%
+&d.keymap = z19map\cr%
+&d()\cr%
+}}\hss}
+
+\Bullet State Information
+		index {\pt "Procedure"} is the procedure
+			{\pt d["Procedure"] \rm is \pt decode}
+		index {\pt "Resumption"} is ``location counter''
+			{\pt d.Resumption = 1 \rm ``restarts'' \pt d}
+		state entries can be changed arbitrarily
+\NewPage
+\centerline{\bigrm Editing == Debugging}
+\Bullet Conventional display editor, written in \EZ
+
+\Bullet Editor edits {\it all\/} \EZ\ types
+		common user interface
+		editing primitives for each type
+		edit arbitrary structures
+
+\Bullet Debugging is editing activations
+
+\Bullet Examining/setting values
+		editing table indices and values
+
+\Bullet Navigating through activations and structures
+
+\Bullet Breakpoints:
+		edit procedure to include a call to editor
+\program
+		edit(d)
+\endprogram
+\medskip
+		i.e. edit the activation
+
+\Bullet Keystrokes abbreviate debugging commands
+\NewPage
+\centerline{\bigrm Incremental Execution}
+
+\Bullet Incremental execution:
+		execute code for a resumption point
+		similar to ``single-stepping''
+
+\Bullet Implementation in \EZ:
+		select fragment to be executed:
+\program
+			x.Procedure[i:j]
+\endprogram\medskip
+		save current procedure and resumption point:
+\program
+			savP = x.Procedure
+			savR = x.Resumption
+\endprogram\medskip
+		reset procedure and resumption point:
+\program
+			x.Procedure = x.Procedure[i:j]
+			x.Resumption = 1
+\endprogram\medskip
+		execute the code for the resumption point
+\program
+			x()
+\endprogram\medskip
+		restore original procedure, resumption point:
+\program
+			x.Procedure = savP
+			x.Resumption = savR
+\endprogram
+
+\Bullet Editing is a natural part of execution
+\bye

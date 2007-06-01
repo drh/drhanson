@@ -1,0 +1,35 @@
+procedure edappd(n, new)
+   while (n > size(carray))
+      carray[size(carray)+1] = ""
+   carray = carray[1:n+1] || table(new) || carray[n+1:size(carray)+1]
+end
+
+procedure edchng(n, new)
+   if (n > size(carray))
+      edappd(n-1, new)
+   else
+      carray[n] = new
+end
+
+procedure eddel(n)
+   carray = carray[1:n] || carray[n+1:size(carray)+1]
+end
+
+procedure edesc()
+end
+
+procedure edgetl(n)
+   return (carray[n])
+end
+
+procedure edinit(v)
+   carray = stot(v)
+end
+
+procedure edlast()
+   return (size(carray))
+end
+
+procedure edquit()
+   return (ttos(carray))
+end

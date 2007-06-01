@@ -1,0 +1,150 @@
+.TH EZ 1 "local \- 1/4/84"
+.ds EZ \fI\s-2EZ\s0\fP
+.SH NAME
+ez \- \*(EZ interpreter and support utilities
+.SH SYNOPSIS
+.B ez
+[ file \(br option ]...
+.br
+.B collect
+[ file \(br option ]...
+.SH DESCRIPTION
+.I ez
+is an interpreter for the \*(EZ command and programming language.
+By default,
+the `read-evaluate'
+loop reads \*(EZ statements from the standard input and executes them,
+printing values for statements consisting of expressions.
+A statement is assumed to fit on one line unless
+the first token is a left brace ({) or the keyword
+.B procedure ,
+which is the beginning of a procedure specification.
+In these cases, input is read until the matching right brace (})
+or keyword
+.B end
+is encountered.
+Execution of the input is accomplished by compiling it as if it were the body
+of a procedure and then invoking that procedure.
+Assuming
+.B s
+is assigned a string containing the input, execution is equivalent to
+the \*(EX expression
+.BR s() .
+Compilation errors are recorded in a string that is assigned to
+.BR errors ,
+which is printed if compilation failed.
+.PP
+The
+.I file
+argument is used as the \*(EZ virtual address space
+and is created and initialized, if necessary.
+If the
+.I file
+argument is missing, the file
+.I ez.sys
+in the current directory is used.
+If more than one
+.I file
+argument is given,
+the rightmost argument is used.
+.PP
+.I ez
+accepts the following options.
+Options are executed when in encountered during the left to right
+processing of the arguments.
+Thus, their placement is significant.
+.IP \fB\-t\fIn\fR
+Set the trace counter to
+.I n
+or to -1 if
+.I n
+is omitted.
+Setting the trace counter is equivalent to calling the \*(EZ built-in
+procedure
+.BR trace ,
+which causes diagnostic messages to be issued for the next
+.I n
+procedure calls and returns.
+.IP "\fB\-D\fIn\fR"
+Turn on debugging bit
+.I n .
+The debugging bits cause various system information to
+be written to the standard error during execution.
+If
+.I n
+is omitted, the debugging bits are set to 0.
+.IP "\fB\-C\fIn\fR"
+Set the limit on the cache to
+.I n
+or to 100 if
+.I n
+is omitted.
+.I ez
+uses an \s-2LRU\s0 cache to access its virtual memory.
+Increasing the size of this cache may improve performance for large
+programs.
+.PP
+.I collect
+is the off-line garbage collector.
+.I ez
+allocates virtual memory upon demand;
+.I collect
+reclaims inaccessible memory for reuse.
+Typically,
+.I collect
+is run periodically, such as during the night,
+on \*(EZ virtual memory files.
+.I collect
+reclaims inaccessible memory in each of its
+.I file
+arguments, or in
+.I ez.sys
+if no
+.I file
+arguments are given, and rewrites those files.
+In addition to the
+.B \-C
+and
+.B \-D
+flags described above,
+.I collect
+accepts the following options.
+.IP "\fB\-s\fR"
+A one-line summary of the collection, indicating the number of
+free and busy pages, is printed on the standard output for each
+.I file
+argument.
+.IP "\fB\-S\fR"
+A detailed map of the free and busy pages is printed on the standard output
+in addition to the one-line summary for each
+.I file
+argument.
+.IP "\fB\-c\fR"
+Normally, inaccessible pages are placed on a free list for later use.
+The
+.B \-c
+option causes the busy pages to be compacted and each
+.I file
+argument is rewritten with the compacted virtual memory.
+.SH FILES
+.ta \w'ez\fInnnnnn\fR\ \ 'u
+ez.sys	default virtual memory file
+.br
+ez\fInnnnnn\fP	temporary file used by \fIcollect\fP
+.SH "SEE ALSO"
+C. W. Fraser and D. R. Hanson,
+The \*(EZ Reference Manual,
+Tech. Rep. 84-1,
+Dept. of Computer Science, Univ. of Arizona, Tucson,
+Jan. 1984.
+.PP
+C. W. Fraser and D. R. Hanson,
+Integrating Operating Systems and Languages,
+Tech. Rep. 84-2,
+Dept. of Computer Science, Univ. of Arizona, Tucson,
+Jan. 1984.
+.PP
+C. W. Fraser and D. R. Hanson,
+A High-Level Programming and Command Language,
+\fIProc. SIGPLAN '83 Symp. on Programming Lang. Issues in Software Systems\fP,
+212-219, San Francisco, June 1983.

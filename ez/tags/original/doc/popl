@@ -1,0 +1,1007 @@
+.ds CF - % -
+.de M
+.nr PQ \\n(.f
+.if !"\\$1"" \\$3\\fM\\$1\\f\\n(PQ\\$2
+.if "\\$1"" .ft M
+..
+.de PS
+.DS I 3n
+.ss 10
+.M
+.if !'\\$1'' .ta \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+.if '\\$1'' .ta 3n +3n +3n +3n +3n +3n +3n +3n
+..
+.de PL
+.DS L
+.ss 10
+.M
+.if !'\\$1'' .ta \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+.if '\\$1'' .ta 3n +3n +3n +3n +3n +3n +3n +3n
+..
+.de PE
+.ss
+.R
+.DE
+..
+.if n .fp 3 M
+.if t .fz M -1
+.ds [ \^\v'-1p'[\v'1p'
+.ds ] \v'-1p']\v'1p'
+.nr LL 6.75i
+.nr HM .7i
+.nr FM 1.15i
+.ds EZ \fI\s-2EZ\s0\fP
+.ds UN U\s-2NIX\s0
+.ds Y \s-2Y\s0
+.ds Un U\s-2NIX\s0
+.ds [[ \*[
+.ds ]] \*]
+.ds t 	
+.de SS
+.br
+.ps \\$1
+.nr PS \\$1
+.vs \\$2p
+.nr VS \\$2
+..
+.LP
+.rs
+.sp .4i
+.ce 100
+\fB\s+1High-Level Language Facilities for Low-Level Services\s0\fP\(dg
+.sp
+Christopher W. Fraser
+\fIDepartment of Computer Science, The University of Arizona
+Tucson, Arizona 85721\fP
+.sp
+David R. Hanson\u\(dd\d
+\fIDepartment of Electrical Engineering and Computer Science, \c
+Princeton University,
+Princeton, New Jersey 08544\fP
+.ce
+.sp .6i
+.2C
+.SH
+Abstract
+.PP
+\*(EZ is a language-based programming environment
+that offers the services provided separately
+by programming languages and operating systems in traditional
+environments.
+These services are provided as facilities of a high-level
+string processing language with a `persistent'
+memory in which values exist indefinitely or until changed.
+In \*(EZ, strings and associative tables provide
+traditional file and directory services.
+This paper concentrates on the use of
+\*(EZ procedures and their activations, which, like
+other values, have indefinite lifetimes.
+In \*(EZ, the low-level aspects of procedure execution,
+such as activation record creation,
+references to local variables, and access to state information,
+are accessible via high-level language constructs.
+As a result, traditionally distinct services can be provided
+by a single service in the \*(EZ environment.
+Furthermore, such services can be written in \*(EZ itself.
+An editor/debugger that illustrates the details of
+this approach is described.
+.FN
+.ps -1
+.vs -1
+\(dgThis work was supported by the National Science Foundation under
+Grants MCS-8102298, MCS-8302398, and DCR-8320257.
+.sp .3v
+\u\(dd\dPermanent address:
+Department of Computer Science, The University of Arizona,
+Tucson, Arizona 85721.
+.sp .2v
+Permission to copy without fee all or part of this material
+is granted provided that the copies are not made or distributed
+for direct commercial advantage,
+the ACM copyright notice and title of the publication and
+its date appear,
+and notice is given that copying is by permission of the
+Association for Computing Machinery.
+To copy otherwise,
+or to republish,
+requires a fee and/or specific permission.
+.sp .125i
+.vs
+.ps
+.FE
+.NH
+Introduction
+.PP
+\*(EZ [.hanson fraser command language, 84-1, 84-2.] is a software system
+that integrates the traditionally distinct facilities of
+programming languages and operating systems into a single system.
+This integration is achieved by providing these facilities
+in a high-level string processing language.
+The result of this integration is a system in which
+all interaction is performed using the language facilities of \*(EZ.
+Examples of interaction that are traditionally
+performed by the operating system or its utilities
+include editing, debugging, and filing.
+Traditional `systems' programming is also done in \*(EZ.
+.PP
+\*(EZ facilitates this degree of integration through
+several unconventional features.
+\*(EZ uses late binding times,
+execution-time scope rules,
+a `persistent' memory model in which objects have infinite lifetimes,
+and a type system that integrates or
+`fuses' [.hanson fraser 1983.] conventionally distinct types
+into single types.
+In addition, \*(EZ provides high-level data types
+such as strings, associative tables, and procedure activations.
+Objects that are manipulated by utilities in traditional operating systems
+are manipulated by operators and control structures in \*(EZ.
+Previous papers [.hanson fraser 1983, 84-2.] have concentrated on the
+use of \*(EZ strings and tables as a file system;
+this paper concentrates on the use of \*(EZ procedure activations.
+.PP
+The version of \*(EZ described here
+is written in C and runs under \*(UN on a VAX-11/780,
+but it is intended to use \*(EZ as
+the complete environment on personal computers.
+The following sections briefly describe the language facilities
+of \*(EZ, its procedure mechanism, and an editor/debugger
+written in \*(EZ, which displays the merits of its facilities.
+.NH
+Data and Control
+.PP
+As a programming language,
+\*(EZ is a high-level string-processing language
+derived from SNOBOL4, SL5,[.sl5 procedure mechanism.] and Icon .[.iconref.]
+It has most of the basic attributes of those languages,
+such as concise, expressive constructs, run-time flexibility,
+untyped variables, heterogeneous structures, and automatic type conversion.
+Strings are treated as scalars, and there are
+numerous `mid-level' string operations similar to those in Icon,
+but pattern matching operations are not provided.
+Many of \*(EZ's features are similar to those
+in traditional languages and the string-processing features
+are similar to those in Icon.
+The reference manual [.ezref.] contains a complete
+description of \*(EZ's syntax, semantics, built-in values, and usage.
+.PP
+\*(EZ has a `persistent' memory much like an APL workspace in which
+values exist until changed.
+Unlike systems that access workspaces explicitly,[.persistent heap.]
+this memory model is implicit in \*(EZ and is a part of the language,
+much as in the Gem system.[.irons graphics software 1976.]
+This is one characteristic that distinguishes \*(EZ from
+various LISP environments, which access traditional operating system
+services through functions or other explicit mechanisms.[.sandewall lisp.]
+The implementation assumes responsibility for managing
+primary and secondary memory, including garbage collection.\s-2\u1\d\s0
+.FS
+\u1\dIn the current version,
+\*(UN provides environmental support such as terminal i/o and
+disk services, but in a personal computer environment,
+the entire computer and its peripherals are to be devoted
+to supporting the \*(EZ environment.
+.FE
+.PP
+\*(EZ supports four basic types of values:
+numerics, strings, procedures, and tables.
+Numerics include integers and reals, which serve their conventional purposes.
+Strings are sequences of characters and have arbitrary length.
+Tables are heterogeneous one-dimensional arrays that can
+be indexed by and can contain arbitrary values.
+Procedures are described below.
+.PP
+Since values persist until changed,
+assignment of a string to a variable
+provides the same facility as creating a `file' in a
+traditional operating system.
+Substring operations provide `random access' facilities;
+.M s\*[i:j\*]
+specifies the substring between character positions
+.M i
+and
+.M j .
+As in Icon, character positions are numbered from the left starting at 1
+and refer to positions between characters.
+Positions may also be specified relative to the right end of
+a string starting at 0 and continuing
+with negative values toward the left.
+For example, the positions in the string
+.M HAT
+are
+.DS
+.ta 0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC
+.M
+\*t\*tH\*t\*tA\*t\*tT\fP
+\*t\(ua\*t\*t\(ua\*t\*t\(ua\*t\*t\(ua
+.ps 6
+.ft R
+\*t1\*t\*t2\*t\*t3\*t\*t4
+\*t-3\*t\*t-2\*t\*t-1\*t\*t0
+.ps
+.DE
+Note that the position after the last character may be specified.
+Substrings may also be specified by starting position and length,
+e.g.,
+.M s\*[i!l\*]
+specifies a substring of length
+.M l
+starting at position
+.M i .
+.PP
+Tables provide an associative array facility similar
+to that provided by tables in SNOBOL4 and Icon and by arrays in
+\fBawk\fP.[.awk.]
+Tables are created automatically as necessitated by subscripting.
+Tables, like other values, persist until changed and thus
+subsume directories in traditional operating systems.
+For example,
+.PS
+paper\*["title"\*] = "High-Level Language...
+paper\*["authors"\*] = cwf || "\en" || drh
+.PE
+creates a table representing this paper and establishes it as the value of
+.M paper .
+.M || "" (
+is string concatenation.)
+The notation \fIe.id\fP is equivalent to \fIe\fM\*["\fIid\^\fM"\*]\fR,
+permitting \*(EZ tables to subsume records in traditional programming languages;
+the example above is equivalent to
+.PS
+paper.title = "High-Level Language...
+paper.authors = cwf || "\en" || drh
+.PE
+Table indices and values can be of arbitrary types.
+For example,
+.PS
+paper\*[1\*].heading = "Introduction"
+paper\*[1\*].body = "\*(EZ is a software...
+paper\*[1\*].top = paper
+.PE
+creates a table for Section 1 of this paper,
+and establishes it as the value associated with index
+.M 1
+in
+.M paper .
+In addition, the value associated with
+.M top
+in the Section 1 table is the table for the entire paper.
+Arbitrary cyclical structures, such as this example, are permitted
+and are, in fact, frequently used in \*(EZ.
+Tables are as large as necessary to accommodate their contents.
+Entries are removed by the built-in function
+.M remove .
+For example,
+.PS
+remove(paper\*[1\*], "top")
+.PE
+removes the value associated with
+.M top
+in the table for Section 1 constructed above.
+Tables can be used to construct a hierarchical `file system',
+such as that provided by \*(UN.
+.PP
+Expressions usually compute values,
+but, as in Icon, some expressions may fail to yield values.
+The absence of values is used to drive control structures.
+For example, the relational operators
+return their right operand only if the relation is satisfied.
+The absence of values terminates
+.B for
+and
+.B while
+loops and determines the flow of
+.B if
+statements.
+For some operators, such as assignment, the absence of a value
+inhibits the execution of the operation.
+.PP
+\*(EZ strings, tables, operators, and control structures
+provide the facilities of files, directories, and file system utilities
+found in operating systems.
+For example, listing the contents of a table
+corresponds to listing the names in a directory.
+Whereas in most operating systems, this service is
+provided by a `list directory' program,
+it can be provided in \*(EZ with a simple loop.
+For example,
+.PS
+for (i in paper)
+	s = s || "," || i
+.PE
+sequences through the table given by
+.M paper ,
+repeatedly assigns the indices of the table to
+.M i ,
+and concatenates the indices onto the end of
+.M s .
+.PP
+Automatic conversions between data types obviate
+the need for most `conversion' utilities found in traditional
+languages and operating systems.
+Numeric operators convert their operands to integers or reals as necessary.
+Similarly, operands of string operators are converted to strings as necessary.
+For some operators,
+the operation performed depends on the type of the operands.
+For example, the relational operators perform lexical comparison if both
+operands are strings and
+numeric comparison (with the appropriate conversions)
+if either operand is numeric.
+.PP
+Conversions between tables and strings are also provided.
+Tables are converted to strings by concatenating their elements,
+and strings are converted to tables by constructing a table
+with the string associated with the index
+.M 1 .
+Thus, for example,
+simply typing the name of a table displays its contents.
+.NH
+Procedures and Activations
+.PP
+\*(EZ procedures are data objects that contain executable code.
+A procedure `declaration' amounts to an assignment
+of the procedure `constant' to the identifier.
+For example, after the execution of
+.PS
+procedure ls(t) local i, s
+	s = ""
+	for (i in t) 
+		s = s || "," || i
+	return (s\*[2:0\*])
+end
+.PE
+the value of
+.M ls
+is a procedure that returns a list of the indices in a table.
+.PP
+Conversions between procedures and strings are performed automatically.
+Procedures are converted to strings by returning their source code.
+Simply typing the name of a procedure, such as
+.M ls ,
+therefore, displays its code.
+Strings are converted to procedures by compiling them.
+Thus,
+.PS
+for (i in work)
+	work\*[i\*]()
+.PE
+executes the values in the table
+.M work ,
+compiling those values that are not procedures.
+In a sense, compilation is simply an optimization in \*(EZ.
+.PP
+Scope rules, which dictate the interpretation of free identifiers,
+depend on the contents of tables interrogated by the compiler.
+Unlike most other systems, these `symbol tables' are \*(EZ tables,
+which can be manipulated at the source-language level.
+As exemplified in
+.M ls ,
+above, identifiers may be declared
+.M local
+and their use is restricted to the associated
+procedure in the traditional manner.
+An interpretation of free identifiers is sought by
+searching the table that is the current value of the variable
+.M root
+for an index value lexically equal to the identifier.
+Thus, the assignment
+.PS
+message = "I'll return soon"
+.PE
+is equivalent to
+.PS
+root\*["message"\*] = "I'll return soon"
+.PE
+If the identifier is not found in
+.M root ,
+the compiler searches the chain of tables given by
+.M 
+root\*[".."\*]\fR,
+.M 
+root\*[".."\*]\*[".."\*]\fR,
+and so on until the identifier is found or a table without a
+.M
+".."
+.R
+entry or whose
+.M
+".."
+.R
+entry is not a table is encountered.
+If this search fails to locate the identifier,
+it is entered in
+.M root .
+.PP
+This interpretation of identifiers is under complete control
+of the user.
+By changing the value of
+.M root
+and altering the path given by the
+.M
+".."
+.R
+entries, rules such as the inheritance rules
+in Smalltalk,[.goldberg smalltalk.] the `search lists' in \*(UN,
+and the information-hiding aspects of modules and
+.M own
+variables can be obtained.
+For example,
+.PS
+root = \*["previous":root\*]
+.PE
+uses a table constructor in which index-value pairs are given as
+.I index:value
+to assign a new table to
+.M root
+that associates the previous value of
+.M root
+with the entry
+.M previous .
+The absence of a
+.M
+".."
+.R
+entry forces free identifiers to be associated with the new table.
+The subsequent input
+.PS
+s = 0
+previous.random = procedure (n)
+	s = (s\(**12621 + 21131)%10000
+	return (s\(**n/10000 + 1)
+end
+.PE
+defines a procedure that generates a sequence
+of pseudo-random numbers in the range 1 to
+.M n
+using the linear congruence method.
+The procedure is made accessible by placing it in the original table,
+but the table containing the state variable
+.M s
+is inaccessible except for the references within
+.M random .
+Other variations, such as saving the table containing
+.M s
+so that it can be changed, are also possible.
+The assignment
+.PS
+root = previous
+.PE
+resets
+.M root
+to its original value.
+.PP
+Procedures may be invoked as in traditional languages, e.g.
+.M ls(root) .
+In addition, conversion from a procedure to a table,
+provided by the built-in function
+.M table ,
+yields a table that is an activation record for the procedure.
+This table contains entries for each of the parameters and
+locals declared in the procedure and entries describing
+the current state of the activation.
+Tables created in this manner can be used as coroutines
+and exist until they are inaccessible.
+.PP
+For example,
+.PL
+procedure decode(cmd, keymap)
+	local c, s, t
+
+	s = ""
+	for (t = keymap; c = cmd\*[1!1\*]; t = t\*[c\*]) {
+		s = s || c
+		cmd = cmd\*[2:0\*]
+		if (type(t\*[c\*]) == "procedure") {
+			t\*[c\*](s)
+			return (1)
+			}
+		else if (type(t\*[c\*]) ~= "table")
+			return
+		}
+end
+.PE
+defines a procedure to traverse a set of nested \*(EZ tables
+using the characters in
+.M cmd
+as indices until an entry containing a procedure is found.
+The expression
+.PS
+d = table(decode)
+.PE
+assigns to
+.M d
+a table representing an activation record for
+.M decode .
+.M d
+contains entries for
+.M
+"cmd",
+"keymap",
+"s",
+"c",
+.R
+and
+.M
+"t",
+.R
+each uninitalized.
+`Invoking'
+.M d
+begins execution of
+.M decode .
+Arguments can be initialized by position, e.g.,
+.PS
+d(nextcmd, z19map)
+.PE
+or by explicit assignment, e.g.,
+.PS
+d.cmd = nextcmd
+d.keymap = z19map
+d()
+.PE
+Execution continues until
+.M decode
+returns.
+Upon return, the entries in
+.M d
+are the values of the parameters and locals upon return.
+For example, if
+.PS
+d("abcd", z19map)
+.PE
+led to the integer
+.M 24
+instead of a table or procedure in the tree beginning with
+.M z19map ,
+.PS
+if (d(nextcmd, z19map))
+	...
+else
+	error = "unbound sequence <" ||
+		d.s || d.cmd ||
+		"> yields " || d.t\*[d.c\*]
+.PE
+assigns
+.PS
+unbound sequence <abcd> yields 24
+.PE
+to
+.M error .
+.PP
+In addition to entries for the 
+parameters and locals, the value associated with the index
+.M
+"Procedure"
+.R
+is the procedure itself, and the value associated with the index
+.M
+"Resumption"
+.R
+is the resumption point or `location counter' for the activation.
+Resumption points correspond to executable expressions or
+statements in the procedure body.
+Resumption points are numbered sequentially following the lexical
+order of the statements and expressions.
+For example, the resumption points for
+.M decode ,
+given as superscripts, are as follows.
+.PL
+procedure decode(cmd, keymap)
+	local c, s, t
+
+	\s-2\u1\d\s+2
+	\s-2\u2\d\s+2s = ""
+	\s-2\u3\d\s+2for (\s-2\u4\d\s+2t = keymap; \s-2\u5\d\s+2c = cmd\*[1!1\*]; \s-2\u6\d\s+2t = t\*[c\*]) {
+		\s-2\u7\d\s+2s = s || c
+		\s-2\u8\d\s+2cmd = cmd\*[2:0\*]
+		\s-2\u9\d\s+2if (\s-2\u10\d\s+2type(t\*[c\*]) == "procedure") {
+			\s-2\u11\d\s+2t\*[c\*](s)
+			\s-2\u12\d\s+2return \s-2\u13\d\s+2(1)
+			}
+		else \s-2\u14\d\s+2if (\s-2\u15\d\s+2type(t\*[c\*]) ~= "table")
+			\s-2\u16\d\s+2return \s-2\u17\d\s+2
+		}
+	\s-2\u18\d\s+2
+end
+.PE
+Resumption points on statements other than expressions are used
+for debugging purposes, as described below.
+.PP
+Activations can be resumed at any point by changing the value
+of the
+.M
+"Resumption"
+.R
+entry.
+Assigning an integer to
+.M
+"Resumption"
+.R
+causes execution to be resumed at the corresponding resumption point
+upon the next invocation.
+For example,
+.PS
+d.Resumption = 1
+d("abcd")
+.PE
+restarts the activation of
+.M decode
+with a new value for the first argument.
+.PP
+Subscripting a
+.I procedure
+with an integer yields the source code for
+the corresponding resumption point.
+For example,
+.M decode\*[7\*]
+returns the string
+.PS
+s = s || c
+.PE
+Substringing a procedure
+yields the source code for the resumption point
+whose code most closely surrounds the substring specified;
+i.e., a normal substring specification
+is `widened' to the boundaries of the nearest resumption point.
+For example,
+.PS
+decode\*[find("type", decode)!1\*]
+.PE
+returns the string
+.PS
+type(t\*[c\*]) == "procedure"
+.PE
+.M find(s1,s2)
+is a built-in procedure that returns the leftmost position in
+.M s2
+where
+.M s1
+occurs as a substring.
+.PP
+The source code for resumption points can be changed at any time,
+and subsequent resumptions of activations refer to the new source code.
+For example,
+.PS
+decode\*[11\*] = "if (~t\*[c\*](s)) return"
+.PE
+changes
+.M decode
+to
+.PS
+procedure decode(cmd, keymap)
+	local c, s, t
+	...
+		if (type(t\*[c\*]) == "procedure") {
+			if (~t\*[c\*](s)) return
+			return (1)
+			}
+	...
+end
+.PE
+and renumbers the resumption points accordingly.
+Subsequent resumption of
+.M d ,
+for example,
+uses the new code.
+Such changes are, of course, typically accomplished with an
+editor, as described below.
+.PP
+Activations are just tables and persist until changed;
+entries can be added, removed, or changed as desired.
+For example, the
+.M Procedure
+entry need not correspond to the procedure
+from which the activation was created;
+it can be changed to any procedure.
+Missing local variables and parameters are created
+as necessary during execution.
+.PP
+Treating activations and tables as a single type
+induces a different programming style that emphasizes
+activations over procedures.
+It is typical, for example, for tables to contain
+.I both
+data and activation information.
+For example,
+.M keymap
+in
+.M decode
+could be used as the activation instead of the argument:
+.PS
+z19map.keymap = z19map
+z19map.Procedure = decode
+z19map.Resumption = 1
+.PE
+includes the necessary entries to use
+.M z19map
+as the activation instead of an argument to an activation.
+Subsequently, expressions such as
+.PS
+z19map("abcd")
+.PE
+accomplish command decoding.
+Including a formatting procedure as the
+.M Procedure
+entry in
+.M paper ,
+described above, is another example.
+.PP
+As these examples suggest,
+activations can be constructed from scratch directly in \*(EZ.
+For instance,
+.PS
+random = \*[
+	"s" : 0,
+	"Procedure" : procedure (n) local s
+		s = (s\(**12621 + 21131)%10000
+		return (s\(**n/10000 + 1)
+	end,
+	"Resumption" : 1
+	\*]
+.PE
+builds an activation for the random number generator described above.
+Each resumption of the generator, e.g.,
+.M random(100) ,
+returns the next random number in the sequence.
+Note that
+.M s
+is hidden as a local variable in this version of
+.M random ;
+in the previous version,
+.M s
+was hidden in another table using the scope rules.
+.NH
+An \*(EZ Editor/Debugger
+.PP
+Just as \*(EZ's built-in operations generalize traditional operations,
+\*(EZ's editor generalizes traditional editing functions.
+In particular, since activations are just \*(EZ tables,
+the editor is automatically a debugger as well.
+.PP
+The editor looks like a conventional screen editor 
+[.meyrowitz compsur 1982 part2.]
+based on the Irons model.[.irons cacm 1972.]
+It displays a screen of text 
+and updates it after each command so that what you see is what you get.
+Hitting cursor keys moves a cursor around the screen,
+and hitting printable characters replaces the character at the cursor
+with the input character.
+A few special function or control keys
+insert and delete text, move the focus, etc.
+The editor's command dispatcher
+served as an example in the previous section.
+Ultimately, menus and a mouse should replace the control and cursor keys 
+required by the development system.
+.PP
+Where conventional editors edit only text files,
+the \*(EZ screen editor edits all \*(EZ values.
+\*(EZ's type integration and automatic conversions
+allow the editor to accomplish this goal by
+managing only two types, strings and tables.
+Both types share one user interface.
+A data-independent front end manages the display
+and translates the user's commands into calls on
+a small set of primitive editing routines that actually manipulate the data.
+When invoked, the front end examines its argument
+and selects the string or table interface accordingly.
+These routines print, change, insert, and delete
+one line in a string or one entry in a table.
+This technique adapts to edit a wide range of types [.fraser cacm 1980.],
+and it also allows tailoring of the editor to sub-abstractions
+(e.g., relational databases represented as tables of tables).
+.PP
+The editor treats numbers, strings,
+and procedures much as a conventional editor treats text files,
+performing conversions to strings as necessary.
+At the end of the editing session,
+it converts the edited value back to the type of the original value.
+.PP
+The editor treats tables by allowing the user
+to edit the table's keys as though they were text.
+It displays an image of the keys,
+and it changes them to reflect the user's changes to the screen.
+For example, when editing a table for an activation of
+.M random ,
+the editor displays its keys
+.PS
+Procedure
+Resumption
+n
+s
+.PE
+Now, for example, changing the last line will change the
+.I name
+of
+.M random 's
+seed variable
+.M s .
+.PP
+An `enter' command recursively invokes the editor on the value
+associated with the key on the line holding the cursor.
+For example, invoking the enter command on the line holding
+.M s
+above edits its associated value, namely the
+.I value
+of the seed.
+That is, the value of
+.M s
+is displayed, and it may be changed by simply overstriking it.
+Because tables subsume conventional file system directories,
+the enter command allows users to walk `directories';
+because tables subsume activations,
+the enter command subsumes traditional debugger commands
+to examine variables as well.
+.PP
+Breakpoints are also implemented as special cases of editing.
+For example, invoking the enter command on the line holding
+.M Procedure
+above edits its associated value, namely the source code,
+which can now be edited as a string.
+For example, inserting
+.PS
+edit(random)
+.PE
+before 
+.M random 's
+assignment to 
+.M s
+changes
+.M random
+to
+.PS
+procedure (n) local s
+	edit(random)
+	s = (s\(**12621 + 21131)%10000
+	return (s\(**n/10000 + 1)
+end
+.PE
+The edited code calls the editor/debugger on each re-entry
+and passes the activation of 
+.M random
+to
+.M edit
+for examination and modification.
+Thus the insertion of this line effectively sets a breakpoint.
+The breakpoint command merely abbreviates
+editor commands for such an insertion.
+Breakpoints are deleted by deleting the inserted text.
+.PP
+Activations can be executed `incrementally'
+by executing the code at a single resumption point.
+Incremental execution is implemented by editing the activation record.
+The user selects a portion of the code fragment to be executed,
+say from position
+.M i
+to position
+.M j ,
+which is widened to resumption point boundaries.
+The substring is extracted, the code is executed, 
+and the resulting value is displayed.
+To use the proper environment (e.g., the proper variables),
+the incremental execution command reuses the activation that is being edited,
+but with a new procedure that consists of just the code for the single
+resumption point from the original procedure.
+This is accomplished by a
+procedure containing the following \*(EZ code.
+.PS
+savP = x.Procedure
+savR = x.Resumption
+x.Procedure = x.Procedure\*[i:j\*]
+x.Resumption = 1
+x()
+.PE
+.M x
+is the editor's single parameter,
+which holds the datum being edited,
+here the activation record being scrutinized.
+After saving the current procedure and resumption point,
+.M x 's
+procedure is changed to just the code for the resumption point.
+This new procedure is executed by resetting the resumption point
+to the beginning and invoking the activation.
+After executing the code for the single resumption point,
+the activation returns, and the editor restores the original
+procedure and resumption point:
+.PS
+x.Procedure = savP
+x.Resumption = savR
+.PE
+By positioning the cursor, the user can execute arbitrary
+portions of a procedure in an arbitrary order and see the effects.
+Since debugging is simply editing in \*(EZ,
+errors can be detected and corrected, and correct execution resumed
+without resorting to the `debug-edit-compile-debug' cycle
+of traditional programming environments.
+.PP
+Incremental execution is similar to the `single-stepping'
+mode provided by traditional debuggers.
+For example, in many cases, using
+.PS
+x.Resumption += savR
+.PE
+in place of the last line of code above advances the resumption point
+of the original procedure past the code just executed.
+The code for setting breakpoints and for incremental execution
+is specific to activation records,
+but they are the only parts of the editor with this property.
+.PP
+Because tables subsume conventional file system directories,
+the editor subsumes traditional file system commands
+to list directories and to remove, create, and rename files.
+Because tables subsume activations,
+the editor subsumes traditional debuggers as well.
+It also subsumes `sub-editors' within such utilities.
+For example, under conventional systems,
+setting a breakpoint and changing a variable in the debuggee
+require quite different commands,
+but under \*(EZ, they are both done with the single generalized editor.
+The user learns to navigate structures as much as to operate commands.
+Where, for example, 
+the \*(UN manual describes many more commands than structures,
+the emerging \*(EZ manual describes fewer commands and more structures.
+Since structures are described declaratively
+where commands are described procedurally,
+this may yield a simpler system.
+.PP
+The editor is to become \*(EZ's primary user interface.
+The current fetch-execute loop may be used only to bootstrap up the editor.
+The use of an editor as the main user interface has been proposed before
+[.irons texas, scofield proposal, wood tools.],
+but it has yet to be fully exploited [.meyrowitz compsur 1982 part2.].
+.NH
+Discussion
+.PP
+\*(EZ's design seeks to provide high-level facilities by
+simplifying and generalizing traditionally low-level facilities
+and encapsulating them in language constructs.
+The resulting facilities are simple and flexible;
+using tables as activations is an example.
+\*(EZ's `open' approach and ability to modify activations
+at the source-language level are in contrast
+to the `closed' approaches of previous coroutine
+facilities,[.marlin coroutines.] in which activations are manipulated
+with a few specific constructs and their internals are inaccessible.
+.PP
+One of the design goals of \*(EZ is to provide the services
+of a modern operating system, such as those provided
+by the \*(UN system calls (viz. \(sc2 of Ref. {.unix manual.}).
+Asynchronous processes are an important omission from the
+list of such services.
+Current work is directed toward using activations as processes,
+permitting them to be resumed asynchronously.
+Likewise, it is intended to use activations to respond to
+interrupts and other asynchronous events.
+.PP
+The full potential of resumption points needs further exploration
+and perhaps refinement.
+For example, setting resumption points using knowledge of the source
+code is somewhat primitive.
+Higher level functions for `scanning' the source code,
+much as the string scanning functions scan strings,
+is a possible alternative.
+This kind of capability also suggests the use of other
+high-level operations, such as pattern matching and database
+functions, on objects such as activations and procedures.
+Manipulating resumption points to handle exceptions
+and error conditions is also a possibility.
+.PP
+Efficient implementation of the \*(EZ procedure mechanism
+is another area for further work.
+The current implementation is straightforward; little
+attempt is made to execute procedure activations efficiently
+and to avoid unnecessary conversions.
+Using lazy evaluation and multiple representations
+for objects, such as is done in recent implementations
+of Smalltalk,[.deutsch popl11,suzuki popl11.] are areas of
+current implementation work.
+.PP
+The central challenge in \*(EZ is finding the natural
+linguistic encapsulation of system services.
+The encapsulation of primary and secondary memory as strings and
+tables is more obvious than similar encapsulations for
+interactive devices, such as keyboards and displays, or higher-level
+representations such as windows and processes.
+Treating procedure activations as data, accessible as data,
+provides a possible encapsulation for such services.
+.SS 10 12
+.[]

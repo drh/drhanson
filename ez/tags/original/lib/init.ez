@@ -1,0 +1,22 @@
+root = ["..":root]
+
+read("lib.ez")()
+
+mkdir(".edit")
+cd(".edit")
+load("edit")
+
+mkdir(".string")
+cd(".string")
+load("string")
+cd()
+
+mkdir(".table")
+cd(".table")
+load("table")
+cd()
+
+mkdir("term")
+cd("term")
+load("z19")
+cd()

@@ -1,0 +1,8 @@
+5i
+inserted line 1
+inserted line 2
+.
+2d
+1,5p
+7,9d
+w foo

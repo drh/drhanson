@@ -1,0 +1,272 @@
+\input macros
+\magnification=\magstep2
+\vsize=9.5 true in
+\font\eightit=ami10 at 8pt \font\footrm=amr8 at 8 true pt \font\pt=amtt10
+\footline={\footrm Slide \folio\hfill POPL\hfill\today}
+\def\Bullet{\bigskip$\bullet$\enspace\enspace}
+\def\NewPage{\vfill\eject}
+\def\EZ{{\sl EZ\/}} \def\Unix{{UNIX}}
+\def\POPL{\leavevmode
+\llap{\vtop to 0pt{\hbox{POPL}\hbox{only}\vss}\quad}}
+\catcode`\^^I=\active
+\def^^I{\hskip .4 true in}
+\def\program{\begingroup\smallskip\obeylines\pt\catcode`\{=12 \catcode`\}=12}
+\catcode`\~=12
+\def\center{\leftskip=0pt plus 1fil \rightskip=\leftskip \parfillskip=0pt}
+\parindent=0pt \parskip=6pt
+\beginsection Introduction (2:00)
+
+For the past few years, Chris Fraser and I have been working on
+various aspects of computing environments and editors.
+One of the projects is the \EZ\ system, which
+consists of a programming language and an associated environment.
+
+A major goal of \EZ\ is to build a computing environment
+that {\sl integrates\/} the traditionally distinct services
+provided by operating systems and programming languages
+as well as the services provided by the separate components of
+conventional programming
+environments, such as editors, debuggers, and command languages.
+
+Another goal is to raise the level of interaction
+by avoiding irrelevant technology.
+For example, there is no difference between primary and
+secondary memory in \EZ, so there is no difference between
+strings and files.
+
+We are exploring programming environments for very high-level
+languages and for {\sl future} languages.
+This is in contrast to other work
+that concentrates on building programming environments
+for {\sl conventional, existing\/} languages, such as Pascal and C.
+
+We have approached the problem
+as a problem in the design and implementation of a very high-level language.
+This language, called \EZ, {\sl is} the computing environment.
+Services provided by traditional operating
+systems appear as language constructs in \EZ.
+\NewPage
+\beginsection The \EZ\ Language (2:30)
+
+\EZ\ is a high-level string processing language
+that has its roots in SNOBOL4, SL5, and Icon.
+Like those languages, it has considerable run-time flexibility.
+For example, variables can be assigned values of any type,
+automatic conversions are performed for most operations,
+and structures are heterogenous.
+
+Since there is no difference between primary and secondary memory in \EZ,
+values exist until changed; a value assigned
+to a variable today is there tomorrow.
+
+There are only four types in \EZ: numbers, strings, procedures,
+and tables.
+Numbers include integers and reals.
+
+Strings are scalars as in \EZ's ancestors, and
+since values exist until changed,
+strings provide the same facility as files in traditional systems.
+Assigning a string to the variable {\pt note}
+is equivalent to establishing that
+string as the contents of the ``file'' named {\pt note}.
+
+Tables are heterogenous, one-dimensional arrays
+that can be indexed by and can contain any value.
+Tables subsume traditional ``file directories''.
+Here, strings are assigned
+to the entries for {\pt title \rm and \pt authors}
+in the table {\pt paper}.
+The double vertical bar is the concatentation operator.
+
+Tables are created automatically by subscripting,
+so if {\pt paper} wasn't a table before the first assignment, it is now.
+Indexing tables by identifiers is common in \EZ\ and a shorthand
+``dot'' notation is provided.
+\NewPage
+\beginsection Procedures (1:45)
+
+For the rest of this talk,
+I'm going to concentrate on procedures and their activations.
+
+Procedures are ``first class'' values in \EZ.
+Procedure declarations are equivalent to assignments
+of procedure constants to identifiers.
+Here, the declaration for {\pt ls} amounts
+to an assignment to {\pt ls}.
+
+Like other values in \EZ, conversion between strings
+and procedures is provided.
+Converting a procedure to a string yields the source
+code for the procedure.
+
+The opposite conversion---string to procedure---is compilation.
+In this loop, the entries in the table {\pt work} are
+``called'', which includes an implicit compilation, if necessary.
+\NewPage
+\beginsection Resumption Points (1:30)
+
+These conversions make
+the source code for procedures accessible from the source language.
+The source code for
+executable {\sl fragments\/} of procedures is also available.
+These fragments include the expressions and statements that, taken together,
+form the source code.
+They are called {\sl resumption points} and are numbered sequentially
+according to their lexical order.
+The resumption points for this procedure are shown as prefix superscripts.
+
+Resumption points serve two purposes: to extract the corresponding
+source code and to provide a ``location counter'' for procedure activations.
+\NewPage
+\beginsection Extracting Resumption Point Code (2:15)
+
+The source code for a resumption point is extracted by
+subscripting a {\sl procedure}.
+For example, subscripting {\pt decode \rm with \pt 6}
+yields the assignment statement {\pt s = s || c}.
+
+{\sl Substringing\/} a procedure, on the other hand,
+yields the code for the resumption points that most
+``closely'' surround the specified substring.
+Here, {\pt find("type", decode)} returns the character
+position of the leftmost occurrence of the
+string {\pt "type" \rm in \pt decode}, which is at position 135.
+Thus, this expression specifies a 1-character substring beginning
+at position 135.
+This substring is contained within resumption point 9
+and is ``widened'' to the source code for that point.
+
+An obvious application of this feature, which I'll elaborate
+on in a moment, is the extraction of code fragments in an editor in response
+to a user pointing at them.
+
+The code for resumption points can be changed by assignments.
+Here, assignment to {\pt decode[10]} changes the code accordingly.
+Compilation of the new code is automatic, and is performed
+the next time the procedure is executed.
+\NewPage
+\beginsection Procedure Activations (3:30)
+
+As in most languages, \EZ\ procedures are invoked, executed,
+and return values.
+Unlike most languages, {\sl procedure activations} are first-class
+values and can be manipulated from the source language.
+
+\EZ\ procedure activations are simply \EZ\ tables.
+An activation for a procedure is a table
+whose indices include the formal parameters, the locals,
+and some execution state information.
+A reference in a procedure to a local or to a parameter
+is equivalent to subscripting the appropriate table with the identifier.
+
+Activations can be created explicitly in two ways:
+by ``converting'' a procedure to a table, and by simply
+constructing a table with the appropriate indices.
+
+Given the procedure {\pt decode} described previously,
+{\pt table(decode)} returns an activation for {\pt decode}, which
+is assigned to {\pt d}.
+{\pt d} is like any other table; for example,
+using the {\pt for} loop shown earlier to sequence through {\pt d}
+yields a list of the indices.
+
+Activations can be invoked just like procedures
+with the obvious effect---they start executing.
+Arguments can be passed or assigned by indexing the table.
+
+Activations also contain
+entries that describe their ``state''.
+The value of the index {\pt "Procedure"} is the procedure
+associated with the activation.
+For example, the value of {\pt d["Procedure"] \rm is \pt decode}.
+The value of the index {\pt "Resumption"} is the number of the
+resumption point at which execution is currently focussed,
+in other words, it's the ``location counter''.
+
+The values of these entries can, of course, be changed at any time.
+Changing the value of {\pt "Resumption"} causes
+execution to resume at a new point the next time the activation
+is invoked.
+An example is ``restarting'' {\pt d} by setting
+it's {\pt "Resumption"} entry to {\pt 1}.
+Changing the value of the {\pt "Procedure"} entry is also possible
+and can be used, for example, to implement a debugger for \EZ,
+on which I'll elaborate in the next few slides.
+
+Incidently, the locals can also be accessed by indexing the table,
+and {\sl other\/} entries, unrelated to the procedure involved,
+can be added to the table as desired.
+Activations are simply tables and all of the table operations apply---period.
+\NewPage
+\beginsection Editing == Debugging (2:30)
+
+The \EZ\ editor provides a good example of how these features
+of \EZ\ that I've described work together to provide
+``high-level'' access to traditionally low-level services.
+
+The editor is written completely in \EZ.
+It is a conventional display editor---what you see is what you get.
+The editor edits \EZ\ values.
+Numbers, strings, procedures, and tables are
+editted using a common interface.
+Recursive invocations of the editor can be used
+to navigate and edit arbitrary structures.
+It's typical to edit the indices in
+a table and then invoke the editor on the value of a selected index.
+
+The editor is also a debugger---debugging amounts to editing activations.
+
+Displaying and changing values during debugging
+is done by editing the appropriate table, that is, the appropriate activation.
+Navigating through sets of activations is equivalent
+to navigating through data structures.
+
+Interrupting execution---breakpoints---is accomplished by
+inserting a call to the editor at the desired point,
+passing the activation of interest.
+Keystrokes and editing functions can be defined
+to abbreviate such an insertion, so the user can simply point
+and strike the ``set a breakpoint here'' key.
+\NewPage
+\beginsection Incremental Execution (3:15)
+
+I'll close with a particularly interesting use of the editor:
+incremental execution of a procedure.
+This is similar to the ``single-stepping'' provided in
+conventional debuggers.
+
+The idea is to select a portion of code and strike the ``execute'' key.
+This is implemented---in \EZ---by executing the code for a
+single resumption point.
+Suppose the user selects the code
+between positions {\pt i \rm and \pt j} in the
+procedure associated with activation {\pt x}.
+To execute this code properly, it must be executed
+as the procedure associated with {\pt x}.
+This is accomplished by first saving {\pt x}'s original procedure
+and the current resumption point.
+
+Next, {\pt x}'s procedure is set to just the selected code
+and its resumption point is set to 1.
+
+Now, the code can be executed by invoking the activation,
+and the result is displayed.
+Finally, the original values of the procedure and resumption
+point are restored.
+
+Incremental execution permits users confronted with bugs
+to execute a portion of the code, see the results, fix
+problems, and then resume correct execution all as a part of editing.
+There is no notion of a ``debug--edit--compile--debug''
+cycle in \EZ---you simply execute, wiping up the
+spilt milk as you go along.
+
+As these examples illustrate, \EZ\ offers a unique computing
+environment---some might even describe it as dangerous!
+It is clear, however, that \EZ's language-based approach
+to providing high-level access to low-level
+system services deserves further attention.
+Ulimately, the goal is to implement an ``\EZ\ workstation''---but
+that's not gonna be easy.
+The End.
+\bye

@@ -1,0 +1,82 @@
+.NH
+Lexical Structure
+.PP
+\*(EZ programs are composed of identifiers, reserved words,
+constants, operators, and other separators.
+The `official' character set of \*(EZ is \s-2ASCII\s0.
+Blanks and tabs are ignored but
+are required to separate some lexical elements
+such as identifiers and reserved words.
+.PP
+Most language constructs are terminated by the end of the line on which
+they appear much as in Ratfor, \*Y, and Icon.
+Within a construct, however, newlines
+may be used as desired to improve
+readability where it is clear that the construct is
+continued on the next line.\(dg
+.FN
+\(dgTechnically, newlines are treated as white space except
+in contexts where they are in the
+.I follow
+set.[.aho ullman compiler.]
+.FE
+.PP
+Reserved words introduce language constructs and may
+not be used for other purposes (e.g. as variable names).
+Reserved words must be given in lower-case.
+The reserved words are
+.TS
+center ;
+lb lb lb .
+break	for	procedure
+continue	if	return
+else	in	while
+end	local
+.TE
+.PP
+An identifier is a sequence of letters, digits, or underscores
+that begins with a letter.
+Corresponding upper- and lower-case letters are treated as different.
+Identifiers may be of any length.
+.PP
+Integer literals are specified by sequences of digits in the usual manner.
+Real literals are specified in the standard fashion,
+but exponential notation (like
+.M 3.45e10 )
+is not supported.
+For magnitudes less than 1, a leading 0 is required.
+.PP
+String literals are specified by delimiting the
+sequence of characters by single (') or double quotes (").
+Some characters, such as newline,
+cannot be entered directly because of their special function.
+The following escape convention may be used to enter these kinds of characters.
+.TS
+center ;
+li	li
+lr	l .
+character	code
+.sp .2v
+newline	\en
+single quote	\e'
+double quote	\e"
+backslash	\e\e
+tab	\et
+any character	\e\fIddd\fP
+.TE
+The specification \e\fIddd\fP represents the character with
+\s-2ASCII\s0 code octal
+.I ddd ;
+only enough digits to specify the code need be given.
+String literals can be continued across line boundaries by preceding
+the newline with a backslash;
+the newline is ignored.
+.PP
+Literals for built-in values, such as the built-in procedures (see \(sc4.8),
+are specified by enclosing the name of the built-in value in
+accent graves, like
+.M `lcase` .
+.PP
+The sharp character (#) causes
+the rest of the line on which it appears to be
+ignored and serves to introduce comments.

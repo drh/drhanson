@@ -1,0 +1,41 @@
+From rebecca Tue May  3 11:24:58 1983
+To: drh
+
+Subject: EZ
+
+	We have been working on this program (for too long now)
+and have the problem narrowed down to lines with Rvalues of the
+string s.   Concatenation of s to some random string got
+rid of the syntax errors, but doesn't do much for quicksort.
+			Confused,
+		         Ron and Becky
+procedure qsort(s)
+   procedure sort(lb,ub)
+   local i,j,p,t
+      i = lb
+      j = ub
+      t = (lb + ub)/2
+      p = s[t!1]
+      while (1) {
+         while (s[i!1] < p)
+            i = i + 1
+         while (p < s[j!1])
+            j = j - 1
+         if (i <= j) {
+            t = s[i!1]
+            s[i!1] = s[j!1]
+            s[j!1] = t
+            i = i + 1
+            j = j - 1
+            }
+         if (i > j)
+            break
+         }
+      if (lb < j)
+         sort(lb,j)
+      if (i < ub)
+         sort(i,ub)
+      end;
+   sort(1,size(s))
+end
+

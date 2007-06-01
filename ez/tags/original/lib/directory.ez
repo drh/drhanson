@@ -1,0 +1,49 @@
+name = "directory"
+
+carray = cdirectory = ""
+
+procedure edappd(n, new)
+   cdirectory[new] = ""
+   carray = keys(cdirectory)
+end
+
+procedure edchng(n, new) local old
+   old = carray[n]
+   cdirectory[new] = cdirectory[old]
+   if (old ~= new)
+      remove(cdirectory, old)
+   carray = keys(cdirectory)
+end
+
+procedure eddel(n)
+   remove(cdirectory, carray[n])
+   carray = keys(cdirectory)
+end
+
+procedure edexec(n) local sarray, sdirectory
+   sarray = carray
+   sdirectory = cdirectory
+   edit(cdirectory[carray[n]])
+   carray = sarray
+   cdirectory = sdirectory
+end
+
+procedure edgetl(n)
+   return (carray[n])
+end
+
+procedure edinit(v)
+   if (v)
+      carray = keys(cdirectory = copy(v))
+end
+
+procedure edquit()
+   return (cdirectory)
+end
+
+procedure keys(t) local i, k, l
+   i = 0
+   for (k in t)
+      l[i=i+1] = k
+   return (sort(l))
+end

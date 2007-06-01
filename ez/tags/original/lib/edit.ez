@@ -1,0 +1,271 @@
+picked = ""
+touchlo = 1000
+touchhi = 0
+
+# addmap - add (s.v) to decoding tree t
+procedure addmap(s, v, t)
+   if (size(s) == 0)
+      return
+   else if (type(t[s[1!1]]) == "table")
+      return (addmap(s[2:0], v, t[s[1!1]]))
+   else if (t[s[1!1]])
+      return
+   else {
+      t[s[1!1]] = mkmap(s[2:0], v)
+      return (t)
+      }
+end
+
+# curmov - move cursor
+procedure curmov(x, y)
+   if (1 <= x <= term.xmax) 
+      cx = x
+   if (y < 1) {
+      scnmov(y - 1)
+      cy = 1
+      }
+   else if (y > term.ymax) {
+      scnmov(y - term.ymax)
+      cy = term.ymax
+      }
+   else
+      cy = y
+end
+
+# delchr - delete character
+procedure delchr() local lin
+   lin = getlin(fy+cy)
+   if (cx <= size(lin)) {
+      dtype.edchng(fy+cy, lin[1:cx] || lin[cx+1:0])
+      touch(cy, cy)
+      }
+end 
+
+# dellin - delete line
+procedure dellin()
+   if (cx == 1)
+      dtype.eddel(fy+cy)
+   else {
+      dtype.edchng(fy+cy, pad(getlin(fy+cy), cx)[1:cx] || getlin(fy+cy+1))
+      dtype.eddel(fy+cy+1)
+      }
+   touch(cy, term.ymax)
+end
+
+# docmd - read/exec one editor command
+procedure docmd() local c, s, t
+   s = ""
+   for (t = term.keymap; c = read(1); t = t[c]) {
+      s = s || c
+      if (c == "\004")
+	 return
+      else if (type(t[c]) == "procedure") {
+	 t[c](s)
+	 return (1)
+	 }
+      else if (type(t[c]) ~= "table") {
+	 term.error(s)
+	 return (1)
+         }
+      }
+end
+
+# ed - put tty in raw mode and edit v
+procedure ed(v) local s
+   screen()
+   term.init()
+   s = edit(v)
+   curmov(1, term.ymax)
+   refresh()
+   screen()
+   if (type(s) ~= "table")
+      return (s)
+   else
+      return
+end
+
+# edit - edit v
+procedure edit(v) local sav
+   sav.cx=cx; sav.cy=cy; sav.dtype = dtype; sav.fy=fy
+   if (type(v) == "table")
+      dtype = root[".table"]
+   else
+      dtype = root[".string"]
+   dtype.edinit(v)
+   mode = 1
+   fy = 0
+   curmov(1, 1)
+   touch(1, term.ymax)
+   refresh()
+   while (docmd())
+      refresh()
+   s = dtype.edquit()
+   cx=sav.cx; cy=sav.cy; dtype =sav. dtype; fy=sav.fy
+   if (type(v) == "procedure")
+      s = proc(s)
+   return (s)
+end
+
+# escape - escape command
+procedure escape()
+   dtype.edesc(fy+cy)
+   touch(1, term.ymax)
+end
+
+# exec - execute line as ez code and insert result as text
+procedure exec() local s
+   s = dtype.edgetl(fy+cy)()
+   curmov(1, cy+1)
+   if (s) {
+      if (s[-1!1] ~= "\n")
+         s = s || "\n"
+      curmov(1, cy+insert(s))
+      }
+end
+      
+expanders = ascii[1!32] || ascii[-1!1]
+for (i = 0; i < 8; i = i + 1)
+   trans[ascii[i+1!1]] = "\\00" || itoc(i, 8)
+for (i = 8; i < 32; i = i + 1)
+   trans[ascii[i+1!1]] = "\\0" || itoc(i, 8)
+trans[ascii[128!1]] = "\\177"
+
+# getlin - get line n
+procedure getlin(n) local i, j, lin
+   lin = ""
+   if (lin = dtype.edgetl(n))
+      for (i = 1; j = upto(expanders, lin, i); i = j)
+	 if (trans[lin[i!1]])
+	    lin[i!1] = trans[lin[i!1]]
+   return (lin)
+end
+
+# inschr - insert character
+procedure inschr() local lin
+   lin = getlin(fy+cy)
+   if (cx <= size(lin)) {
+      dtype.edchng(fy+cy, lin[1:cx] || " " || lin[cx:0])
+      touch(cy, cy)
+      }
+end
+
+# insert - insert text from s at cursor
+procedure insert(s) local i, lin, n
+   lin = pad(getlin(fy+cy), cx)
+   s = lin[1:cx] || s || lin[cx:0]
+   for (n = fy+cy-2; i = upto("\n", s); s = s[i+1:0]) 
+      dtype.edappd(n=n+1, s[1:i])
+   if (s ~= "")
+      dtype.edchng(n+2, s)
+   n = n - (fy+cy-2)
+   if (n > 0)
+      touch(cy, term.ymax)
+   else
+      touch(cy, cy)
+   return(n)
+end
+
+# inslin - insert line
+procedure inslin()
+   insert("\n")
+end
+
+# mark - remember cursor position
+procedure mark()
+   mx = cx
+   my = cy
+end
+
+# mkmap - make decoding tree for (s.v)
+procedure mkmap(s, v) local t
+   if (size(s) == 0)
+      return (v)
+   else {
+      t[s[1!1]] = mkmap(s[2:0], v)
+      return (t)
+      }
+end
+
+# pick - copy text from mark through cursor to pick buffer
+procedure pick() local i, lin
+   picked = ""
+   for (i = my; i <= cy; i = i + 1) {
+      lin = getlin(i)
+      if (i == cy)
+	 lin = lin[1:cx]
+      else
+	 lin = lin || "\n"
+      if (i == my)
+	 lin = lin[mx:0]
+      picked = picked || lin
+      }
+end
+
+# put - insert text from pick buffer at cursor
+procedure put() local lin
+   insert(picked)
+end
+
+# overstrike - overstrike character
+procedure overstrike(c) local lin
+   lin = pad(getlin(fy+cy), cx)
+   dtype.edchng(fy+cy, lin[1:cx] || c || lin[cx+mode:0])
+   curmov(cx+1, cy)
+   touch(cy, cy)
+end
+
+# refresh - update the screen
+procedure refresh() local i
+   for (i = touchlo; i <= touchhi; i = i + 1)
+      screen(1, i, getlin(fy+i) || "\n")
+   screen(cx, cy)
+   touchlo = 1000
+   touchhi = 0
+end
+
+# scnmov - slide screen n lines
+procedure scnmov(n)
+   if (fy+n < 0)
+      n = -fy
+   fy = fy + n
+   cy = cy - n
+   if (cy < 1)
+      cy = 1
+   else if (cy > term.ymax)
+      cy = term.ymax
+   touch(1, term.ymax)
+end
+
+# search - incremental search in direction d
+procedure search(d) local c, i, n, p, s
+   s = ""
+   while (c = read(1)) {
+      if (c == "\033") {
+	 searched = s
+	 return
+	 }
+      else if (c == "\015")
+	 s = s || searched
+      else
+         s = s || c
+      n = dtype.edlast()
+      for (i = fy+cy; 1 <= i <= n; i = i + d) 
+         if (p = find(s, getlin(i))) {
+	    fy = i - 1
+	    curmov(p, 1)
+	    touch(1, term.ymax)
+	    refresh()
+            break
+	    }
+      if (i < 1 | i > n) {
+	    term.error()
+	    s = s[1:-1]
+	    }
+      }
+end
+
+# touch - arrange to refresh screen lines lo-hi
+procedure touch(lo, hi)
+   touchlo = min(touchlo, lo)
+   touchhi = max(touchhi, hi)
+end

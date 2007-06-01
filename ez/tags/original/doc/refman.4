@@ -1,0 +1,853 @@
+.de Bi
+.IP "\\fM\\$1\\fP"
+.br
+..
+.NH
+Expressions
+.PP
+Expressions normally compute values.
+In some cases, such as the comparison operators,
+an expression may not yield a value.
+The absence of a value is used to drive control structures (see \(sc5).
+Expression evaluation proceeds according to
+the precedence and associativity of the operators involved.
+.PP
+Evaluation is left-to-right.
+Operator precedence and associativity is summarized in
+the following table in order of increasing precedence.
+.TS
+center ;
+li li
+l lr .
+operators	associativity
+.sp .2v
+\(eq	right-to-left
+\|\(br	left-to-right
+&	left-to-right
+== ~= < <= >= >	left-to-right
+\fR\*(||\fP	left-to-right
+\(pl \(mi	left-to-right
+\(** / %	left-to-right
+\(mi	unary
+~	unary
+.TE
+.LP
+Parentheses may be used as usual to override the built-in
+precedence and associativity rules.
+.PP
+\*(EZ includes a ``persistent'' environment.
+Variables retain their values indefinitely until changed by assignment.
+.NH 2
+Variables
+.PP
+The most basic expression refers to a variable\*(ema scalar,
+a table element, or a substring:
+.DL I
+variable:
+	identifier
+	expression . identifier
+	expression \fR`['\fP expression \fR`]'\fP
+	expression \fR`['\fP expression \fR:\fP expression \fR`]'\fP
+	expression \fR`['\fP expression \fR!\fP expression \fR`]'\fP
+.DE
+.PP
+Tables are created automatically upon assignment to a subscripted variable.
+For example, after executing the statements
+.PS
+a = 4
+a[6] = 45
+.PE
+.M a
+is a table with one entry.
+Referencing a non-existent table entry does not create the entry.
+The ``dot notation''
+.I "expression.identifier"
+is equivalent to
+\fIexpression\fR[\fM"\fIidentifier\fM"\fR].
+.PP
+The substring operation can be applied to strings and tables.
+For strings, a substring is a sequence of characters within a string
+and is specified by character positions.
+The first form of substring (using the :)
+specifies the substring between the character positions given
+by the two expressions.
+The positions may given in either order.
+.PP
+Character positions within a string are numbered
+from the left starting at 1.
+The numbering refers to positions between characters.
+For example, the positions in the string
+.M HAT
+are
+.DS
+.ta 0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC
+.M
+\*t\*tH\*t\*tA\*t\*tT\fP
+\*t\(ua\*t\*t\(ua\*t\*t\(ua\*t\*t\(ua
+.ps 6
+.ft R
+\*t1\*t\*t2\*t\*t3\*t\*t4
+.ps
+.DE
+Note that the position after the last character may be specified.
+.PP
+Positions may also be specified relative to the right end of
+a string starting at 0 and continuing
+with negative values toward the left:
+.DS
+.ta 0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC
+.M
+\*t\*tH\*t\*tA\*t\*tT\fP
+\*t\(ua\*t\*t\(ua\*t\*t\(ua\*t\*t\(ua
+.ps 6
+.ft R
+\*t-3\*t\*t-2\*t\*t-1\*t\*t0
+.ps
+.DE
+For this string, positions 4 and 0 are equivalent, positions
+3 and \(mi1 are equivalent, etc.
+The valid positions for a string
+.M s
+are in the range
+.M
+\(misize(s)
+.R
+to
+.M "size(s) + 1" ,
+inclusive.
+The substring operation does not return a value if
+the positions are outside of this range.
+In general, the positive position
+.M i
+is equivalent to the nonpositive position
+.M "i\ \(mi\ (size(s)\ +\ 1)" .
+.PP
+For subtables, the ``positions'' may be of any type.
+Given positions
+.I i
+and
+.I j ,
+the first form of the subtable (using the :) operation
+refers to those entries
+in the table with indices greater than or equal to
+.I i
+and less than or equal to
+.I j .
+The comparisons are made using the comparison operators (see \(sc4.5).
+When the subtable operation is used in a context requiring a value,
+it returns a new table containing the selected entries.
+.PP
+The second form of the substring and subtable operation
+\fIexpression\fR[\fIi!j\fR] is equivalent to
+\fIexpression\fR[\fMinteger(\fIi\fM):integer(\fIi\fM)\(plinteger(\fIj\fM)\fR],
+where
+.M integer
+is described in \(sc4.8.
+.NH 2
+Primaries
+.PP
+The primary expressions are:
+.DL I
+expression:
+	literal
+	variable
+	procedure-specification
+	table-constructor
+	expression \fR(\fP \fR[\fP expression \fR[\fP , \c
+expression \fR]\fP... \fR]\fP \fR)\fP
+	\fR(\fP expression \fR)\fP
+.DE
+.PP
+Literals are described in \(sc2 and variables are described above.
+.PP
+Procedures are specified as follows.
+.DL I
+procedure-specification:
+	\fBprocedure\fP \fR[\fP identifier \fR]\fP \c
+\fR(\fP \fR[\fP identifier \fR[\fP , identifier \fR]\fP... \fR]\fP \fR)\fP
+		\fR[\fP \fBlocal\fP identifier \fR[\fP , identifier \fR]\fP... \fR]...
+		\fR[\fP \fIstatement\fP \fR]\fP...
+		\fBend\fP
+.DE
+Procedures are defined by executing their specifications.
+When a statement consisting solely of a
+procedure specification with a procedure name is executed,
+the resulting procedure is assigned to the procedure name,
+otherwise, procedure specifications are constants.
+.PP
+Formal parameters and explicitly declared locals are local to their procedure.
+The meaning of free identifiers is interpreted by
+searching the \*(EZ table that is the current value of the
+variable
+.M root
+for an index value lexically equal to the identifier.
+Thus, the assignment
+.PS
+message = "I'll return in 10 minutes"
+.PE
+is equivalent to
+.PS
+root["message"] = "I'll return in 10 minutes"
+.PE
+If the identifier is not found in
+.M root ,
+the compiler searches the chain of tables given by
+.M
+root[".."]\fR,
+.M
+root[".."][".."]\fR,
+and so on until the identifier is found or a table without a
+.M
+".."
+.R
+entry or whose
+.M
+".."
+.R
+entry is not a table is encountered.
+If this search fails to locate the identifier,
+it is entered in
+.M root .
+By changing the value of
+.M root
+or altering the path given by the
+.M
+".."
+.R
+entries, the user can control the interpretation of free identifiers.
+.PP
+Tables can be constructed by the table constructor, defined as follows.
+.DL I
+table-constructor:
+	\fR`[' [\fP expression \(br expression : expression \fR[ ,\fP \c
+expression \(br expression : expression \fR]... ] `]'\fP
+.DE
+A single expression specifies the value of a table element for an integer index
+value equal to the position of the expression in the list, beginning at 1.
+If a pair of expressions separated by a colon is given,
+the value of the first expression is the index and the value of the
+second expression is the associated value.
+The constructor [\|] returns an empty table.
+.PP
+Procedure invocation includes automatic conversion of the
+invoking expression to a procedure, if necessary.
+Values other than procedures
+are converted to string, if necessary, and then compiled
+as if the string were the body of a procedure.
+Compilation errors result in a run-time error.
+Procedures are recursive.
+Procedures communicate via arguments or global variables.
+Arguments are transmitted by value.
+The actual value of a table is a pointer to that table.
+Thus, when a table is passed as an argument,
+transmission by value has the effect of transmission by reference.
+.NH 2
+Concatenation
+.LP
+.DL I
+expression:
+	expression \fR\*(||\fP expression
+.DE
+The concatenation operator can be used to concatenate string and tables.
+If both operands are tables,
+the result is a new table that contains all of the entries in both
+of the operands.
+If the first table contains any entries with integral indices,
+entries from the second table with integral indices appear
+in the new table with their indices renumbered sequentially starting at
+.I n +1,
+where
+.I n
+is the largest integral index in the first table.
+If an index value appears in both operands, the associated value
+appearing the right operand appears in the resulting table.
+.PP
+For all other types,
+the operands are converted to strings, if necessary,
+and the result is a new string created by
+appending the second string to the first string.
+The empty string is the identity with respect to concatenation.
+.NH 2
+Arithmetic
+.LP
+.DL I
+expression:
+	\(mi expression
+	expression \(** expression
+	expression / expression
+	expression % expression
+	expression \(mi expression
+	expression \(pl expression
+.DE
+.PP
+The unary \|\(mi\| operator denotes arithmetic negation.
+.PP
+The binary \(** and / operators denote multiplication and division,
+respectively.
+In integer division, the result is truncated.
+The binary % operator denotes the residue operation.
+The result is an integer and
+is the remainder of the first expression divided by the second.
+The operands of % must be integer; the appropriate
+conversions are performed automatically if necessary.
+Division and residue by 0 result in a run-time error.
+.PP
+The binary \(mi and \(pl operators denote arithmetic subtraction and addition,
+respectively.
+.br
+.ne 10
+.NH 2
+Comparisons
+.LP
+.DL I
+expression:
+	expression < expression
+	expression <= expression
+	expression == expression
+	expression ~= expression
+	expression >= expression
+	expression > expression
+.DE
+The comparison operators are
+< (less than),
+<= (less than or equal),
+== (equal to),
+~= (not equal to),
+>= (greater than or equal to), and
+> (greater than).
+They all return the value of the right operand if the relation is true.
+If the relation is false, no value is returned.
+.PP
+If both operands are strings, string comparison is performed.
+If either operand is numeric,
+the other operand is converted converted to numeric and numeric comparison
+is performed.
+In this case, integer comparison is performed if both
+operands are integers.
+Otherwise, the operands are
+converted to real, if necessary, and real comparison is performed.
+.PP
+In all other cases, the operands are compared by `object comparison';
+two objects (tables and procedures) are equal if they refer to the same object.
+The other comparison operators yield unpredictable, but reproducible, results,
+e.g. in comparing two different tables, one is always less than the other.
+Finally, all procedures are `less than' all tables.
+.NH 2
+Logic
+.LP
+.DL I
+expression:
+	~expression
+	expression \fR`\^\(br\|'\fP expression
+	expression & expression
+.DE
+The unary ~ operator denotes boolean negation.
+It returns the null string if
+.I expression
+does not yield a value and no value otherwise.
+.PP
+The binary \^\(br and & operators denote inclusive \s-2OR\s0 and \s-2AND\s0,
+respectively.
+Binary \^\(br returns its left operand if it yields a value,
+otherwise, it returns its right operand.
+Binary & does not return a value if its left operand does not yield a value
+and it returns its right operand otherwise.
+In expressions involving these operators,
+only enough of the expression to determine the outcome is evaluated.
+For example, in
+.PS
+if (f(x) \^\(br g(x)) x = 0
+.PE
+.M g
+is not invoked if
+.M f
+returns a value.
+.NH 2
+Assignment
+.LP
+.DL I
+expression:
+	variable = expression
+	variable op= expression
+.DE
+The binary = operator denotes assignment.
+The value of the expression is stored in the location denoted by the variable.
+After assignment,
+the type of the variable is the type of
+.I expression .
+The value of
+.I expression
+is the result of the = operator.
+If
+.I expression
+has no value, no assignment is made.
+For example, in
+.PS
+max = max < a
+.PE
+no assignment is made to
+.M max
+if
+.M max
+is not less than
+.M a .
+.PP
+The = operator associates to the right, permitting multiple assignments,
+e.g.,
+.PS
+a = b = c = 6
+.PE
+associates as in
+.PS
+a = (b = (c = 6))
+.PE
+Evaluation of assignments is left-to-right.
+Thus, in
+.PS
+a[i] = f(x,y)
+.PE
+the value of
+.M i
+.I before
+the invocation of
+.M f
+is used to index
+.M a .
+.PP
+Assignment can be augmented with any binary operator,
+.I op ,
+and the assignment is equivalent to
+.PS
+.ft I
+variable = variable op expression
+.PE
+except that
+.I variable
+is evaluated once.
+.PP
+Substring and subtable assignment is defined using
+an equivalent concatenation.
+.PS
+x[i:j] = y
+.PE
+is equivalent to
+.PS
+x = x1 \*(|| y \*(|| x2
+.PE
+where
+.M x1
+is
+.M x[1:i-1]
+and
+.M x2
+is
+.M x[j+1:0]
+if
+.M x
+is a string.
+If
+.M x
+is a table,
+.M x1
+is a table containing the entries of
+.M x
+with indices that are less than
+.M i
+and
+.M x2
+is a table containing the entries of
+.M x
+with indices that are greater than
+.M j .
+If necessary,
+.M y
+is converted to the type of
+.M x .
+.NH 2
+Built-in Values
+.PP
+\*(EZ has numerous built-in values, most of which are functions.
+Built-in values are the initial values of the variables given below
+in the initial value of
+.M root .
+The values of these variables may be changed.
+For functions,
+different functions expect arguments of different types.
+Automatic conversion is performed to convert arguments to the
+required types.
+Failure of automatic conversion results in a run-time error.
+.PP
+.Bi arg(i)
+.M arg
+returns the
+.M i th
+.I actual
+argument of its caller.
+The argument is returned as a variable so that assignments to the argument
+can be made.
+If
+.M i
+does not specify an actual argument,
+.M arg
+does not return a value.
+.Bi ascii
+The initial value of
+.M ascii
+is a string containing all of the characters
+in the  \s-2ASCII\s0 character set in collating order.
+.Bi display(n)
+.M display
+prints on the standard error output
+a list describing the
+.M n
+levels of procedure invocation starting at the current procedure invocation.
+For each level,
+.M display
+prints the name of the procedure, abbreviated images of its arguments,
+and abbreviated images of the locals.
+The names of the entries and associated values in the current
+.M root
+are also printed.
+If
+.M n
+is less than or equal to 0,
+only the names of the entries and associated values in the current
+.M root
+are printed.
+.M display
+does not return a value.
+.Bi "dump(t,...)"
+For each argument that is a table,
+.M dump
+prints on the standard error output
+a list of the names of the entries and associated values in the table.
+.Bi "find(s1, s2, i, j)"
+.M find
+returns the leftmost position in
+.M s2
+where
+.M s1
+occurs as a substring in
+.M s2[i:j] .
+If
+.M s1
+is not a substring of
+.M s2[i:j] ,
+no value is returned.
+.M i
+and
+.M j
+are optional and, if omitted,
+default to 1 and 0, respectively.
+.Bi image(x)
+.M image
+returns a string representing the value of
+.M x .
+For strings,
+enclosing quotes and escapes are included in the string.
+For procedures,
+the returned string encloses in quotes
+the source code presented to the table when the procedure was compiled.
+For built-in procedures, the source code is the appropriate
+built-in literal.
+For tables, the string
+.M
+"table"
+.R
+is returned.
+If
+.M x
+has no value,
+the string
+.M
+"void"
+.R
+is returned.
+.Bi integer(x)
+.M integer
+returns the value of
+.M x
+converted to an integer.
+If the conversion is not possible,
+no value is returned.
+If
+.M x
+is a real, or a string representation of a real,
+the fractional part is truncated.
+.Bi lcase
+The initial value of
+.M lcase
+is a string containing the lower-case letters in alphabetical order.
+.Bi "many(c, s, i, j)"
+.M many
+returns the position in
+.M s
+after the longest initial substring of
+.M s[i:j]
+consisting solely of characters contained in
+.M c .
+If the first character of
+.M s[i:j]
+is not contained in
+.M c ,
+no value is returned.
+.M i
+and
+.M j
+are optional and, if omitted,
+default to 1 and 0, respectively.
+.Bi "map(s1, s2, s3)"
+.M map
+returns a string resulting from a character mapping on
+.M s1 ,
+where each character of
+.M s1
+that is contained in
+.M s2
+is replaced by the character in the corresponding position in
+.M s3 .
+Characters of
+.M s1
+that do not appear in
+.M s2
+are left unchanged.
+If the same character appears more than once in
+.M s2 ,
+the rightmost correspondence with
+.M s3
+applies.
+If the sizes of
+.M s2
+and
+.M s3
+are not the same,
+a run-time error occurs.
+.Bi "match(s1, s2, i, j)"
+.M match
+returns the position in
+.M s2
+after the occurrence of
+.M s1
+as an initial substring of
+.M s2[i:j] .
+If
+.M s1
+is not an initial substring of
+.M s2[i:j] ,
+no value is returned.
+.M i
+and
+.M j
+are optional and, if omitted,
+default to 1 and 0, respectively.
+.Bi numeric(x)
+.M numeric
+returns the value of
+.M x
+converted to a real or an integer.
+If the conversion is not possible,
+no value is returned.
+.Bi proc(x)
+.M proc
+returns the procedure that results
+from compiling
+.M x ,
+which is converted to string, if necessary.
+.M x
+is treated as a sequence of \*(EZ statements.
+If the compilation fails,
+.M compile
+does not return a value,
+and a list of compilation errors is assigned to
+.M errors .
+.Bi read(s)
+When invoked without arguments,
+.M read
+returns the next line of input from the standard input
+omitting the newline.
+When invoked with one argument,
+which is converted to string if necessary,
+.M read
+returns the contents of the external file whose
+name is given by the argument.
+.M read
+does not return a value if the end of file
+is encountered on the standard input or if the named external file
+cannot be read.
+.Bi "remove(t, x,...)"
+.M remove
+accepts an arbitrary number of pairs of arguments in which
+the first is a table and the second is an index in that table
+and removes that index and its associated value from the table.
+.M remove
+does not return a value.
+.Bi root
+The value of
+.M root
+is the \*(EZ table used by the compiler to interpret
+the meaning of free identifiers; see \(sc4.2.
+.Bi "screen(x, y, s)"
+.M screen
+provides an interface to the
+.I curses
+window manipulation package on \*(UN.[.curses.]
+At any given time,
+the user's terminal is in either
+.I raw
+or
+.I cooked
+mode; initially it is in
+.I cooked
+mode.
+When invoked with no arguments,
+.M screen
+toggles between modes.
+When called with two or three arguments,
+.M screen
+moves the cursor to position
+.M x,y ) (
+and displays
+.M s .
+If necessary,
+.M x
+and
+.M y
+are converted to integers,
+and
+.M s
+is converted to string.
+If
+.M s
+is omitted,
+the cursor is moved but nothing is displayed.
+.M screen
+does not return a value.
+.Bi size(x)
+If
+.M x
+is a table,
+.M size
+returns the number of elements in
+.M x .
+Otherwise,
+.M x
+is converted to a string, if necessary, and
+.M size
+returns the number of characters in that string.
+.Bi string(x)
+.M string
+converts
+.M x
+to a string and returns that string.
+Numerics are converted to the
+appropriate string representation.
+Tables are converted to strings by converting their
+contents to strings and concatenating the results.
+Procedures are converted to string by returning the source
+code presented to the compiler when they were compiled.
+.Bi system(s)
+.M system
+converts
+.M s
+to a string, if necessary, and calls the \*(UN library routine
+.I system
+with the resulting string, which causes execution of the \*(UN
+commands given by
+.M s .
+.M system
+returns the integer ``exit code'' that results from executing the commands.
+If
+.M s
+is too long for the command buffer,
+.M system
+does not return a value.
+.Bi table(x)
+.M table
+converts
+.M x
+to a table or returns
+.M x
+if it is already a table.
+If
+.M x
+is not a table,
+a new table in which the value of
+.M x
+is associated with the index
+.M 1
+is returned.
+.Bi trace(n)
+.M trace
+causes the next
+.M n
+procedure invocations to be ``traced''.
+A diagnostic message is written to the standard error output at
+each procedure call and return.
+On a procedure call,
+the trace message includes
+the procedure name and abbreviated images of the arguments.
+On a return,
+the message includes the procedure name and,
+if a value is returned,
+an abbreviated image of that value.
+Each message is indented with a number of periods equal to the level
+from which the call or return is made.
+For each trace message,
+.M n
+is decremented.
+Tracing stops automatically when
+.M n
+becomes 0.
+If
+.M n
+is negative, tracing continues indefinitely.
+.Bi type(x)
+.M type
+returns the data type of
+.M x
+as a string, i.e. it returns
+.M
+"integer"\fR,
+.M
+"real"\fR,
+.M
+"string"\fR,
+.M
+"table"\fR,
+or
+.M
+"procedure"\fR.
+If
+.M x
+has no value,
+.M type
+returns the null string.
+.Bi ucase
+The initial value of
+.M ucase
+is a string containing the upper-case letters in alphabetical order.
+.Bi "upto(c, s, i, j)"
+.M upto
+returns the leftmost position in
+.M s
+of the first instance of a character of
+.M c
+in
+.M s[i:j] .
+If no character in
+.M s[i:j]
+is contained in
+.M c ,
+no value is returned.
+.M i
+and
+.M j
+are optional and, if omitted, default to 1 and 0, respectively.
+.Bi void
+Initially,
+.M void
+does not have a value.
+.Bi "write(x,...)"
+.M write
+converts each of its arbitrary number of arguments to a string,
+if necessary, and writes them to the standard output.

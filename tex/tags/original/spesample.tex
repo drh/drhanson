@@ -1,0 +1,275 @@
+%
+%	This is the sample paper marked up with the LaTeX SPE macros.
+%	Note that references are prepared using BiBTeX, and are in the
+%	BiBTeX bibliography "spe.bib"
+%
+\documentstyle[times,spe,epsf]{article}
+\begin{document}
+
+% comment out the following line to include time and date in footer
+\def\sysdetails{}
+
+\title{Sample Paper for SPE}
+\author{A. N. OTHER}
+\affiliation{Department of Computation,
+The Institute of Science and Technology,
+P.O. Box 88,
+Chichester PO19 1UD, UK}
+
+\titlehead{SAMPLE PAPER FOR SPE}
+\authorhead{A. N. OTHER}
+\received{1 March 1988}
+\revised{25 March 1988}
+% volume issue month year first-page last-page
+\spe{1}{1}{JANUARY}{88}{1}{4}
+
+\maketitle
+
+\author{J. OTHER}
+\affiliation{Department of Typography,
+The Institute of Science and Technology,
+Science Park, Main Road,
+Chichester, West Sussex, PO19 1UD, UK}
+\makeauthor
+
+\begin{abstract}
+The paper should start with a summary (maximum length 200 words) of the entire
+paper, not of the conclusions alone. It
+should be set in nine point bold on a baseline of ten points. The
+heading should be in nine point bold capitals.
+\end{abstract}
+
+\bibliographystyle{spe}
+
+\keywords{Data structures\quad Data types\quad Persistent data\quad
+          Abstract data store\quad User interfaces}
+
+\section*{KEY WORDS}
+
+The key words (of which there should be no more than six) which follow the
+summary should be set in
+eight point medium. The words KEY WORDS should be in small capitals in
+eight point medium. One line of white space should separate the
+end of the summary and the key words.
+
+\section*{GENERAL SPECIFICATIONS}
+
+All papers submitted on disk will be set in Times Roman when
+published in the journal. If you are unable to use this type face
+your source file will be amended. The source file will also be
+amended to incorporate any changes that may be required at the
+later stages. In the light of these facts we would ask you not to
+make any attempt to balance the pages in the file which is
+submitted for publication.
+
+The papers will be set to a width of 34 picas and a depth of 48
+lines of body text. Short Communications will be set in two columns of
+16$1\over2$ picas width. Running headline details are
+controlled by the macros. If you are submitting CRC these will be
+added prior to publication when the pagination is known.
+
+The text should be set in eleven point medium on a twelve point baseline.
+For Short Communications the text should be set in nine point medium on a ten
+point baseline.
+
+\section*{DETAILS FOR PAPER OPENING}
+
+The title of the paper should be set in 18 point medium, centred.
+The first letters of the main words should be capitalised.
+One line of space should be set under the title.
+
+For a Short Communication the words `Short Communication' should be set as the
+title, with the title of the communication itself set in eleven point capitals
+at the head of the first column.
+
+The author's name should be set in eleven point
+medium small capitals on a twelve point baseline.
+
+The address details should be set in nine point italics on a
+ten point baseline in the style shown above, without punctuation
+at the end of lines.
+
+\section*{FIRST LEVEL HEADING}
+
+A first level heading should be set centred in eleven
+point (nine point for a Short Communication) medium capitals with one and a
+half lines of space above and half a line of space below.\cite{FastCom}
+The first word of the first paragraph should not be indented.
+Subsequent paragraphs should be indented one em of set.
+
+\subsection*{Second level headings}
+
+A second level heading should be set flush left in eleven
+point (nine point for a Short Communication) bold with only the first word
+capitalised. As with first
+level headings one and a half lines of space should be set above
+and half a line of space should be set below the heading. The
+start of the first paragraph should be indented,
+as should subsequent paragraphs, by one em.
+
+\subsubsection*{Third level headings}
+
+A third level heading should be set flush left in eleven
+point (nine point for a Short Communication) italic with only the first word
+capitalised. As with first
+level headings one and a half lines of space should be set above
+and half a line of space should be set below the heading. The
+start of the first paragraph\cite{UFFS}
+should be indented, as should subsequent paragraphs, by one em.
+
+\subsubsubsection{Fourth level headings}
+A fourth level heading should be indented by one em and set in eleven point
+Times italic on a baseline of twelve points (for a Short Communication nine
+points on a ten point baseline), with only the first word
+capitalised. There should be half a
+line of space above the heading and the text should run on from the heading
+after a full point.
+
+\section*{LISTS}
+
+Lists should be numbered or
+identified with letters. In each case half a line of white space
+should separate the list from the preceding and subsequent text.
+
+A list should be indented by one em. If the identifier varies in
+width it should be aligned on the right.
+
+The start of the list text should be separated from the
+identifier by one en space.
+
+\begin{enumerate}
+
+\item
+This is a numbered list which should show the
+indentation level which is expected.
+
+\item
+List entries which extend to more than one line should
+have second and subsequent lines aligned with the first text character.
+
+\end{enumerate}
+
+\section*{EXTRACTS}
+
+\begin{quote}
+An extract should be set in eleven point medium on a
+baseline of twelve points (nine point on a ten point baseline for Short
+Communications). The text should be indented by two ems on
+each side and should be set with a line of white space
+separating the extract from the preceding and subsequent text.
+\end{quote}
+
+\section*{FOOTNOTES}
+
+Footnotes should be set in eight point medium on a
+baseline of nine points. They should be indicated by symbols in the order
+* \dag \ddag \S \P $\parallel$ on each page.
+\footnote{
+All footnotes should be set to the full measure (the column width for a Short
+Communication) with a four pica length rule separating it from the text on
+that page.} 
+
+\section*{FIGURES}
+
+If you are able to incorporate the figures in the
+source file they should appear as close to the first reference as
+possible. One line of space should separate the figure from the
+preceding and subsequent text. If you are submitting the
+illustration\cite{SPE}
+as hard copy leave a nominal space in the file
+and set the caption at this point.
+
+\begin{figure*}[ht]
+\begin{center}
+\leavevmode
+\epsfxsize=27.5pc
+\epsffile{fig1.eps}
+\end{center}
+\caption{Illustration for sample paper. Reproduced from G. Santucci and P. A.
+Sottile, `Query by diagram: a visual experiment for querying databases',
+Software---Practice and Experience, Vol. 23, 317--340 (1993)}
+\end{figure*}
+
+The figure caption should be set in nine point italic on a ten
+point baseline (eight point on a nine point baseline for Short
+Communications). It should be set to the width of the illustration
+and should be centred on the full measure. One line of space
+should separate the caption from the illustration itself. The final full point
+should be omitted from figure and table captions.
+
+\section*{TABLES}
+
+Tables should be set in nine point medium on a baseline
+of ten points (eight point on a nine point baseline for Short
+Communications). Vertical lines should not be set. Tables should be numbered
+with roman numerals.
+
+\begin{table*}[ht]
+\begin{center}
+
+\caption{Basic performance measures$^*$}
+\begin{tabular}{@{} l l r @{}}
+\tmedline
+Operation & & \multicolumn{1}{r}{Cost} \\
+\hline
+Null kernel call & & 1 ms \\
+Create/destroy link & & 3 ms \\
+Disk block read or write (512 bytes) & & 110 ms \\
+ & Local & Remote \\
+ \cline{2-3}
+Send/receive 0-byte message & 10 ms & 63 ms \\
+Send/receive 1024-byte message & 25 ms & 280 ms \\
+\tmedline
+{\tabnote $^*$ A table footnote set in eight point medium.}
+
+\end{tabular}
+\end{center}
+\end{table*}
+
+\acknowledgements
+
+If you are including any acknowledgements the heading
+should be set in small capitals in eleven point medium (nine point for a Short
+Communication). One and a half
+lines of space should be set above and half a line of space should
+be set below. The start of the first paragraph should not be
+indented. The acknowledgements should appear at the end of the main text
+before any appendices and the references.
+
+\appendix
+\section*{COMPUTER PROGRAMS}
+
+Appendices should normally appear after the acknowledgements but before the
+references.
+
+Computer programs and program words in running text should be set
+in 11 point Univers light (nine point for a Short
+Communication). The use of bolder type for `keywords' should be
+avoided unless, as in the case of Algol 68, it is essential, in which case 11
+point Univers medium (eight point for Short Communications) should be used.
+
+\begin{figure}[h]
+\sf\obeylines
+main() \{
+\quad printf("This is an example program.$\backslash$n");
+\}
+\end{figure}
+
+\endappendix
+
+\section*{REFERENCES}
+
+If you are including any references the heading should
+be set in capitals in ten point medium. One and a half lines of
+space should be set above and half a line of space should be set
+below. The reference should be identified within the paper with a
+sequential number set as a superscript.\cite{FastCom,UFFS,SPE}
+
+The text of the references is to be set in nine point medium on a ten point
+baseline (eight point on a nine point baseline for Short Communications). The
+details of style depend on the nature of the reference. Some examples are
+given below.
+
+\bibliography{sample}
+
+\end{document}

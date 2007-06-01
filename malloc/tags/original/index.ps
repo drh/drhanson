@@ -1,0 +1,1070 @@
+%!PS-Adobe-1.0
+%%Title: COS 217 Fall 1994. Detecting Memory Usage Errors and Leaks
+%%DocumentFonts: Helvetica Helvetica-Bold Helvetica-Oblique Courier Courier-Bold Courier-Oblique
+%%Creator: NCSA Mosaic, Postscript by Ameet Raval & Frans van Hoesel
+%%Pages: (atend)
+%%EndComments
+save
+/D {def} def /E {exch} D
+/M {moveto} D
+/S {show} D
+/R {rmoveto} D
+/L {lineto} D
+/RL {rlineto} D
+/SQ {newpath 0 0 M 0 1 L 1 1 L 1 0 L closepath} D
+/U {gsave currentpoint currentfont /FontInfo get /UnderlinePosition get
+ 0 E currentfont /FontMatrix get dtransform E pop add newpath moveto
+ dup stringwidth rlineto stroke grestore S } D
+/B {/r E D gsave -13 0  R currentpoint 
+  newpath r 0 360 arc closepath fill grestore } D
+/OB {/r E D gsave -13 0  R currentpoint 
+  newpath r 0 360 arc closepath stroke grestore } D
+/NP {xmargin topmargin translate scalfac dup scale } D
+/HR {/l E D gsave l 0 RL  stroke grestore } D
+/SF {E findfont E scalefont setfont } D
+/FF {/Courier } D
+/FB {/Courier-Bold } D
+/FI {/Courier-Oblique } D
+/RF {/Helvetica} D
+/BF {/Helvetica-Bold} D
+/IF {/Helvetica-Oblique} D
+/reencodeISO {
+dup dup findfont dup length dict begin
+{ 1 index /FID ne { def }{ pop pop } ifelse } forall
+/Encoding ISOLatin1Encoding D
+currentdict end definefont
+} D
+/ISOLatin1Encoding [
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/space/exclam/quotedbl/numbersign/dollar/percent/ampersand/quoteright
+/parenleft/parenright/asterisk/plus/comma/minus/period/slash
+/zero/one/two/three/four/five/six/seven/eight/nine/colon/semicolon
+/less/equal/greater/question/at/A/B/C/D/E/F/G/H/I/J/K/L/M/N
+/O/P/Q/R/S/T/U/V/W/X/Y/Z/bracketleft/backslash/bracketright
+/asciicircum/underscore/quoteleft/a/b/c/d/e/f/g/h/i/j/k/l/m
+/n/o/p/q/r/s/t/u/v/w/x/y/z/braceleft/bar/braceright/asciitilde
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/dotlessi/grave/acute/circumflex/tilde/macron/breve
+/dotaccent/dieresis/.notdef/ring/cedilla/.notdef/hungarumlaut
+/ogonek/caron/space/exclamdown/cent/sterling/currency/yen/brokenbar
+/section/dieresis/copyright/ordfeminine/guillemotleft/logicalnot
+/hyphen/registered/macron/degree/plusminus/twosuperior/threesuperior
+/acute/mu/paragraph/periodcentered/cedilla/onesuperior/ordmasculine
+/guillemotright/onequarter/onehalf/threequarters/questiondown
+/Agrave/Aacute/Acircumflex/Atilde/Adieresis/Aring/AE/Ccedilla
+/Egrave/Eacute/Ecircumflex/Edieresis/Igrave/Iacute/Icircumflex
+/Idieresis/Eth/Ntilde/Ograve/Oacute/Ocircumflex/Otilde/Odieresis
+/multiply/Oslash/Ugrave/Uacute/Ucircumflex/Udieresis/Yacute
+/Thorn/germandbls/agrave/aacute/acircumflex/atilde/adieresis
+/aring/ae/ccedilla/egrave/eacute/ecircumflex/edieresis/igrave
+/iacute/icircumflex/idieresis/eth/ntilde/ograve/oacute/ocircumflex
+/otilde/odieresis/divide/oslash/ugrave/uacute/ucircumflex/udieresis
+/yacute/thorn/ydieresis
+] D
+[RF BF IF FF FB FI] {reencodeISO D} forall
+/xmargin 43 D
+/topmargin 720 D
+/scalfac 0.57858 D
+%%EndProlog
+%%Page: 1 1
+save
+NP
+0 -20 M
+BF 12 SF
+0 -10 R
+(COS 217. Introduction to Programming Systems. Fall 1994.)S
+0 -35 M
+0 -50 M
+BF 18 SF
+0 -15 R
+(Detecting Memory Usage Errors and Leaks)S
+0 -73 M
+0 -88 M
+RF 14 SF
+0 -12 R
+(Memory usage errors are so common in C programs that special tools, like )S
+FF 14 SF
+0 1 R
+(purify)S
+RF 14 SF
+0 -1 R
+(, are available to help)S
+0 -105 M
+0 -12 R
+(detect these kinds of errors. Three common errors are )S
+0 -122 M
+26 -137 M
+0 -12 R
+(1. )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+(ing or )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+(ing memory that wasn't allocated by )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+(, or )S
+FF 14 SF
+0 1 R
+(calloc)S
+RF 14 SF
+0 -1 R
+(; )S
+26 -154 M
+0 -12 R
+(2. )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+(ing or )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+(ing free memory; and )S
+26 -171 M
+0 -12 R
+(3. )S
+(failing to )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( memory. )S
+45 -188 M
+0 -203 M
+0 -12 R
+(The goal of this assignment is to implement versions of )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(calloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+(, and )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( that collaborate)S
+0 -220 M
+0 -12 R
+(to detect the usage errors listed above and to report potential )S
+IF 14 SF
+(leaks)S
+RF 14 SF
+(, i.e., allocated memory that isn't freed.)S
+0 -237 M
+0 -12 R
+(These functions are packaged in the library )S
+FF 14 SF
+0 1 R
+(libmalloc.a)S
+RF 14 SF
+0 -1 R
+(.)S
+0 -254 M
+0 -269 M
+0 -12 R
+(These special versions of the allocation functions manage storage as detailed in their specifications \(see page)S
+0 -286 M
+0 -12 R
+(252 in )S
+(K&R)U
+( and the )S
+(man page)U
+( for )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(\), and they write messages about their actions to )S
+FF 14 SF
+0 1 R
+(memmon)U
+RF 14 SF
+0 -1 R
+(. The)S
+0 -303 M
+0 -12 R
+(program )S
+FF 14 SF
+0 1 R
+(memmon)U
+RF 14 SF
+0 -1 R
+( analyzes these messages and prints warnings about illegal usage and about leaks. For)S
+0 -320 M
+0 -12 R
+(example, the program below, which is available as )S
+FF 14 SF
+0 1 R
+(/u/cs217/7/bug2.c)U
+RF 14 SF
+0 -1 R
+(, has 3 usage errors and 1 leak. )S
+0 -337 M
+0 -352 M
+FF 12 SF
+0 -9 R
+(1       void *f\(int i\) { return i > 0 ? f\(i - 1\) : malloc\(10\); })S
+0 -366 M
+0 -9 R
+(2       main\(\) {)S
+0 -380 M
+0 -9 R
+(3               void *p = f\(3\);)S
+0 -394 M
+0 -9 R
+(4               double d;)S
+0 -408 M
+0 -9 R
+(5       )S
+0 -422 M
+0 -9 R
+(6               free\(p\);)S
+0 -436 M
+0 -9 R
+(7               free\(p\);)S
+0 -450 M
+0 -9 R
+(8               free\(0\);)S
+0 -464 M
+0 -9 R
+(9               free\(\(void*\)1\);)S
+0 -478 M
+0 -9 R
+(10              free\(&d\);)S
+0 -492 M
+0 -9 R
+(11              f\(2\);)S
+0 -506 M
+0 -9 R
+(12      })S
+0 -520 M
+0 -535 M
+RF 14 SF
+0 -12 R
+(The call to )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( at line 7 frees memory that has already been freed, the calls to )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( at lines 9 and 10 pass)S
+0 -552 M
+0 -12 R
+(pointers that were not returned by )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(. The call to )S
+FF 14 SF
+0 1 R
+(f)S
+RF 14 SF
+0 -1 R
+( in line 11 creates a leak. When )S
+FF 14 SF
+0 1 R
+(bug2.c)S
+RF 14 SF
+0 -1 R
+( is compiled,)S
+0 -569 M
+0 -12 R
+(loaded with )S
+FF 14 SF
+0 1 R
+(/u/cs217/7/libmalloc.a)S
+RF 14 SF
+0 -1 R
+(, and run, )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( reports these errors: )S
+0 -586 M
+0 -601 M
+FF 12 SF
+0 -9 R
+(% lcc -Bstatic /u/cs217/7/bug2.c /u/cs217/7/libmalloc.a)S
+0 -615 M
+0 -9 R
+(% a.out)S
+0 -629 M
+0 -9 R
+(memmon $Revision: 1.7 $)S
+0 -643 M
+0 -9 R
+(Options: a.out=a.out -inuse-at-exit=yes -show-all-calls=no -log-file=stderr -temp-file=/usr/tmp/aaaa03384)S
+0 -657 M
+0 -671 M
+0 -9 R
+(** free'ing free memory)S
+0 -685 M
+0 -9 R
+(   free\(0x1ad18\) called from:)S
+0 -699 M
+0 -9 R
+(        main             [pc=0x2300])S
+0 -713 M
+0 -9 R
+(   This block is 10 bytes long and was malloc'd from:)S
+0 -727 M
+0 -9 R
+(        f                [pc=0x22c0])S
+0 -741 M
+0 -9 R
+(        f                [pc=0x22a4])S
+0 -755 M
+0 -9 R
+(        f                [pc=0x22a4])S
+0 -769 M
+0 -9 R
+(        f                [pc=0x22a4])S
+0 -783 M
+0 -9 R
+(        main             [pc=0x22e4])S
+0 -797 M
+0 -811 M
+0 -9 R
+(** free'ing unallocated memory)S
+0 -825 M
+0 -9 R
+(   free\(0x1\) called from:)S
+0 -839 M
+0 -9 R
+(        main             [pc=0x2318])S
+0 -853 M
+0 -867 M
+0 -9 R
+(** free'ing unallocated memory)S
+0 -881 M
+0 -9 R
+(   free\(0xf7fff710\) called from:)S
+0 -895 M
+0 -9 R
+(        main             [pc=0x2324])S
+0 -909 M
+0 -923 M
+0 -9 R
+(** Memory in use at 0x1ad08)S
+0 -937 M
+0 -9 R
+(   This block is 10 bytes long and was malloc'd from:)S
+0 -951 M
+0 -9 R
+(        f                [pc=0x22c0])S
+0 -965 M
+0 -9 R
+(        f                [pc=0x22a4])S
+0 -979 M
+0 -9 R
+(        f                [pc=0x22a4])S
+0 -993 M
+0 -9 R
+(        main             [pc=0x2330])S
+0 -1007 M
+0 -1022 M
+FF 14 SF
+0 -11 R
+(memmon)S
+RF 14 SF
+0 -1 R
+('s diagnostics include the top portion of the )S
+IF 14 SF
+(call stack)S
+RF 14 SF
+( at the point the error occurred. For some errors,)S
+0 -1039 M
+0 -12 R
+(the call stack at the point of allocation is also printed.)S
+0 -1056 M
+0 -1071 M
+0 -12 R
+(Several other test cases are available in )S
+FF 14 SF
+0 1 R
+(/u/cs217/7/bug?.c)U
+RF 14 SF
+0 -1 R
+(.)S
+0 -1088 M
+0 -1103 M
+BF 17 SF
+0 -14 R
+(Implementation Details)S
+0 -1123 M
+0 -1138 M
+RF 14 SF
+0 -12 R
+(Each call to )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(calloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+(, and )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( causes a message to be written to )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+(. The format of)S
+showpage restore
+%%Page: 2 2
+save
+NP
+RF 14 SF
+0 0 M
+0 -12 R
+(these binary messages is described in )S
+FF 14 SF
+0 1 R
+(/u/cs217/7/memmon.h)U
+RF 14 SF
+0 -1 R
+( and in the )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( )S
+(man page)U
+(.)S
+0 -17 M
+0 -32 M
+0 -12 R
+(The first message causes a )S
+IF 14 SF
+(pipe)S
+RF 14 SF
+( to be created between the current process and a new process running )S
+0 -49 M
+FF 14 SF
+0 -11 R
+(memmon)S
+RF 14 SF
+0 -1 R
+(. Use the system call )S
+FF 14 SF
+0 1 R
+(pipe)U
+RF 14 SF
+0 -1 R
+( to create the pipe, )S
+FF 14 SF
+0 1 R
+(fork)U
+RF 14 SF
+0 -1 R
+( to create a new process, and )S
+FF 14 SF
+0 1 R
+(execl)U
+RF 14 SF
+0 -1 R
+( to run )S
+0 -66 M
+FF 14 SF
+0 -11 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( in the new process; )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( is located in )S
+FF 14 SF
+0 1 R
+(/u/cs217/7/memmon)S
+RF 14 SF
+0 -1 R
+(. Use )S
+FF 14 SF
+0 1 R
+(close)U
+RF 14 SF
+0 -1 R
+( and )S
+FF 14 SF
+0 1 R
+(dup2)U
+RF 14 SF
+0 -1 R
+( to rearrange)S
+0 -83 M
+0 -12 R
+(the file descriptors so that the messages are written to )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+('s standard input. Use )S
+FF 14 SF
+0 1 R
+(write)U
+RF 14 SF
+0 -1 R
+( to write the)S
+0 -100 M
+0 -12 R
+(messages.)S
+0 -117 M
+0 -132 M
+0 -12 R
+(Each message includes the top 10 return addresses in the call stack that led to the call. If there are fewer than)S
+0 -149 M
+0 -12 R
+(10 return addresses, 0s are passed for the missing ones. You'll need to traverse the stack to find these)S
+0 -166 M
+0 -12 R
+(addresses in order to include them in the messages sent to )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+(. For example, when )S
+FF 14 SF
+0 1 R
+(f)S
+RF 14 SF
+0 -1 R
+( calls )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(, )S
+0 -183 M
+FF 14 SF
+0 -11 R
+(malloc)S
+RF 14 SF
+0 -1 R
+('s return address is in )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+('s )S
+FF 14 SF
+0 1 R
+(%i7)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(f)S
+RF 14 SF
+0 -1 R
+('s return address is in )S
+FF 14 SF
+0 1 R
+(f)S
+RF 14 SF
+0 -1 R
+('s )S
+FF 14 SF
+0 1 R
+(%i7)S
+RF 14 SF
+0 -1 R
+(, and so on. )S
+IF 14 SF
+(Some)S
+RF 14 SF
+( of these)S
+0 -200 M
+0 -12 R
+(registers are on the stack and some are in other register windows. The system call ``)S
+FF 14 SF
+0 1 R
+(ta 3)S
+RF 14 SF
+0 -1 R
+('' causes the SPARC)S
+0 -217 M
+0 -12 R
+(operating system to copy )S
+IF 14 SF
+(all)S
+RF 14 SF
+( of the register windows into their corresponding stack frames.)S
+0 -234 M
+0 -249 M
+0 -12 R
+(Once the registers have been copied into their stack frames, the return addresses can be found by traversing)S
+0 -266 M
+0 -12 R
+(the stack. Given an appropriate starting point \(e.g., the current value of )S
+FF 14 SF
+0 1 R
+(%sp)S
+RF 14 SF
+0 -1 R
+(\) this traversal can be written)S
+0 -283 M
+0 -12 R
+(entirely in C. The ``bottom'' frame is the one with a 0 return address and a 0 frame pointer. Also, the)S
+0 -300 M
+0 -12 R
+(second-to-bottom frame is for the C start-up code that calls )S
+FF 14 SF
+0 1 R
+(main)S
+RF 14 SF
+0 -1 R
+(; do not include these bottom two frames in )S
+0 -317 M
+FF 14 SF
+0 -11 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( messages.)S
+0 -334 M
+0 -349 M
+0 -12 R
+(In the absence of errors, your functions must work as specified in )S
+FF 14 SF
+0 1 R
+(stdlib.h)S
+RF 14 SF
+0 -1 R
+( \(see page 252 of )S
+(K&R)U
+(\). Read the)S
+0 -366 M
+0 -12 R
+(specification of )S
+FF 14 SF
+0 1 R
+(realloc)U
+RF 14 SF
+0 -1 R
+( carefully; pages 93-96 of )S
+(Maquire)U
+( tour the )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+( minefield.)S
+0 -383 M
+0 -398 M
+FF 14 SF
+0 -11 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( detects errors in the use of the allocation functions, and it prints diagnostics like those shown above.)S
+0 -415 M
+0 -12 R
+(At first glance, it may seem that your implementations of the allocation functions can simply write the messages)S
+0 -432 M
+0 -12 R
+(to )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( and let it do all of the work. But your implementations must be robust - they must not fail when used)S
+0 -449 M
+0 -12 R
+(incorrectly. For example, your )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( must cope with the errors illustrated in )S
+FF 14 SF
+0 1 R
+(bug2.c)U
+RF 14 SF
+0 -1 R
+( above. So, your functions)S
+0 -466 M
+0 -12 R
+(must detect the same errors that )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+( does and take evasive action, which usually means ignoring the)S
+0 -483 M
+0 -12 R
+(offending calls. They must also cope gracefully with other error conditions, like errors in launching )S
+FF 14 SF
+0 1 R
+(memmon)S
+RF 14 SF
+0 -1 R
+(.)S
+0 -500 M
+0 -515 M
+0 -12 R
+(You may use the versions of )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+( and )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+( in )S
+FF 14 SF
+0 1 R
+(/u/217/src/malloc/firstfit.c)U
+RF 14 SF
+0 -1 R
+( or those in Sec. 8.7)S
+0 -532 M
+0 -12 R
+(of )S
+(K&R)U
+( as starting points for your implementations. See also Chap. 3 of )S
+(Maquire)U
+(. Package your functions in )S
+0 -549 M
+FF 14 SF
+0 -11 R
+(libmalloc.a)S
+RF 14 SF
+0 -1 R
+(. If you need to define external symbols other than )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(calloc)S
+RF 14 SF
+0 -1 R
+(, )S
+FF 14 SF
+0 1 R
+(realloc)S
+RF 14 SF
+0 -1 R
+(, and )S
+FF 14 SF
+0 1 R
+(free)S
+RF 14 SF
+0 -1 R
+(, use)S
+0 -566 M
+0 -12 R
+(names that begin with an underscore to avoid conflicts with functions from other libraries. My implementation of)S
+0 -583 M
+0 -12 R
+(the functions, which does more than is necessary for this assignment, is 203 lines. A simpler version of my)S
+0 -600 M
+0 -12 R
+(implementation is 152 lines.)S
+0 -617 M
+0 -632 M
+BF 17 SF
+0 -14 R
+(Testing)S
+0 -652 M
+0 -667 M
+RF 14 SF
+0 -12 R
+(You can test your )S
+FF 14 SF
+0 1 R
+(libmalloc.a)S
+RF 14 SF
+0 -1 R
+( with the programs from assignments 3-6. For example, if you remove the)S
+0 -684 M
+0 -12 R
+(deallocations from your )S
+FF 14 SF
+0 1 R
+(wf)S
+RF 14 SF
+0 -1 R
+( program, you'll get leaks. As shown in the )S
+FF 14 SF
+0 1 R
+(bug2.c)U
+RF 14 SF
+0 -1 R
+( above, the ``)S
+FF 14 SF
+0 1 R
+(-Bstatic)S
+RF 14 SF
+0 -1 R
+('' option is)S
+0 -701 M
+IF 14 SF
+0 -12 R
+(essential)S
+RF 14 SF
+( whenever you load your )S
+FF 14 SF
+0 1 R
+(libmalloc.a)S
+RF 14 SF
+0 -1 R
+(; without it, some return addresses will be incorrect. \(They will)S
+0 -718 M
+0 -12 R
+(point to data, not code because without )S
+FF 14 SF
+0 1 R
+(-Bstatic)S
+RF 14 SF
+0 -1 R
+( some libraries are loaded dynamically.\) Another good test is)S
+0 -735 M
+FF 14 SF
+0 -11 R
+(/u/cs217/5/calc.c)S
+RF 14 SF
+0 -1 R
+(. When used with a correct )S
+FF 14 SF
+0 1 R
+(libap.a)S
+RF 14 SF
+0 -1 R
+(, this program allocates many )S
+FF 14 SF
+0 1 R
+(AP_T)S
+RF 14 SF
+0 -1 R
+(s but has only)S
+0 -752 M
+0 -12 R
+(two leaks. Finally, )S
+FF 14 SF
+0 1 R
+(/u/cs217/7/bug?.c)U
+RF 14 SF
+0 -1 R
+( test some of the usage errors and the boundary cases, e.g., a call)S
+0 -769 M
+0 -12 R
+(stack of exactly 10 return addresses.)S
+0 -786 M
+0 -801 M
+0 -12 R
+(It is easy to write test programs that will crash your allocation functions, e.g., by corrupting all of memory)S
+0 -818 M
+0 -12 R
+(including )S
+FF 14 SF
+0 1 R
+(malloc)S
+RF 14 SF
+0 -1 R
+('s data structures. So, unlike previous assignments, if your program crashes with an)S
+0 -835 M
+0 -12 R
+(unannounced core dump, you'll loose points only for the specific error and then only if it's your fault.)S
+0 -852 M
+0 -867 M
+BF 17 SF
+0 -14 R
+(Submission)S
+0 -887 M
+0 -902 M
+RF 14 SF
+0 -12 R
+(Submit)U
+( your solution with the command )S
+0 -919 M
+45 -934 M
+FF 14 SF
+0 -11 R
+(/u/cs217/bin/submit 7 makefile )S
+IF 14 SF
+0 -1 R
+(files)S
+RF 14 SF
+( )S
+45 -951 M
+0 -966 M
+0 -12 R
+(where )S
+IF 14 SF
+(files)S
+RF 14 SF
+( are your RCS files. Make sure your RCS files hold the latest revisions when you submit them. Your )S
+0 -983 M
+FF 14 SF
+0 -11 R
+(makefile)S
+RF 14 SF
+0 -1 R
+( must be written so that the command ``)S
+FF 14 SF
+0 1 R
+(make)S
+RF 14 SF
+0 -1 R
+('' compiles your functions and combines them into a)S
+0 -1000 M
+0 -12 R
+(library )S
+FF 14 SF
+0 1 R
+(libmalloc.a)S
+RF 14 SF
+0 -1 R
+(. Your )S
+FF 14 SF
+0 1 R
+(makefile)S
+RF 14 SF
+0 -1 R
+( can specify other targets, but )S
+FF 14 SF
+0 1 R
+(libmalloc.a)S
+RF 14 SF
+0 -1 R
+( should be the first and)S
+0 -1017 M
+0 -12 R
+(thus default target.)S
+0 -1034 M
+0 -1049 M
+BF 14 SF
+0 -12 R
+(Due: submitted by 11:59pm, Mon. 12/5.)S
+0 -1066 M
+0 -1081 M
+771 HR
+0 -1098 M
+0 -3 R
+20 dict begin
+
+/pix 3 string def
+
+gsave currentpoint 23 sub translate 0 2 translate 20 23 scale
+20 23 1
+[20 0 0 -23 0 23]
+
+{currentfile pix readhexstring pop}
+image
+fffffffffffffffffffffe0ffffe0ffffe0ffffe0ffffe0ffffe0ff9fe0ff1fe0fe1ffffc0000f
+80001f00003f80007fc000ffe1fffff1fffff9ffffffffffffffffffffff
+end
+grestore
+20 0 R
+RF 14 SF
+0 -9 R
+( )S
+(Back to the COS 217 home page)U
+0 -1124 M
+0 -1139 M
+BF 10 SF
+0 -9 R
+(Copyright \(c\) 1994 by David R. Hanson)S
+showpage restore
+%%Page: 3 3
+save
+NP
+BF 10 SF
+0 0 M
+0 -15 M
+IF 14 SF
+0 -12 R
+(Mon Dec 5 22:16:06 EST 1994 )S
+showpage restore
+%%Trailer
+restore
+%%Pages: 3

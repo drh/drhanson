@@ -1,0 +1,273 @@
+% letter macros; see Appendix E of the TeXBook
+\input macros
+\raggedbottom \hsize=6.5 true in
+\parindent=0pt \parskip=0pt \nopagenumbers
+\headline={\ifnum\pageno>1
+	\tenrm \addressee\hfil\today\hfil \folio \else \hfil \fi}
+\def\beginlinemode{\endmode
+	\begingroup \obeylines \def\endmode{\par\endgroup}}
+\def\beginparmode{\endmode
+	\begingroup \parskip=1ex \parindent=2em \def\endmode{\par\endgroup}}
+\let\endmode=\par
+\def\endletter{\endmode {\closing} \annotations
+	\ifx\ps\relax\else\beginparmode\nobreak\ps\endmode\fi\vfil\supereject
+	\ifx\makelabel\relax \else \pageno=0 \makelabel \vfil\supereject\fi}
+\newdimen\longindentation \longindentation=4 true in
+\let\ps=\relax
+\def\nolabel{\let\makelabel=\relax}
+
+\newbox\theaddress
+\def\address{\beginlinemode \getaddress}
+{\obeylines \gdef\getaddress #1
+	#2
+	{#1\gdef\addressee{#2}%
+	\global\setbox\theaddress=\vbox\bgroup \elevenpoint \raggedright %
+	\hsize=\longindentation \everypar={\hangindent=2em}#2
+	\def\endmode{\egroup\endgroup \copy\theaddress \medskip}}}
+
+\def\makelabel{\vfill\eject \copy\theaddress
+\eightpoint \bigskip \returnaddress \bigskip \returnaddress
+}
+
+\def\letterhead{\def\style{vanilla}
+\elevenpoint\pageno=1 {\leftskip=\longindentation\today\par} \bigskip}
+
+\def\body{\message{style: \style, to: \addressee} \beginparmode \noindent}
+
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+\name\par}
+
+\newcount\encl \encl=0 \let\cc=\relax
+\def\name{David R. Hanson}
+\def\title{Professor}
+\def\from{\name, \title}
+\def\secy{me} \def\refid{drh/\secy}
+\def\annotations{\medskip {\ninepoint \refid\par
+	\ifnum\encl>0 encl: \number\encl\par \fi
+	\ifx\cc\relax \else {\setbox0=\hbox{cc:\enspace} \parindent=\wd0
+	  \noindent cc:\enspace \cc\par} \fi}}
+
+\def\returnaddress{}
+
+% specific letter formats
+\def\home{ \def\style{home}
+\def\letterhead{\pageno=1 {\ninepoint \leftskip=\longindentation
+15 Old Orchard Lane\par Princeton, NJ 08540\par
+\today\par} \bigskip \elevenpoint}
+\def\returnaddress{David R. Hanson\par
+15 Old Orchard Lane\par
+Princeton, NJ 08540\par}
+\def\annotations{\medskip {\ninepoint
+	\ifnum\encl>0 encl: \number\encl\par \fi
+	\ifx\cc\relax \else {\setbox0=\hbox{cc:\enspace} \parindent=\wd0
+	  \noindent cc:\enspace \cc} \fi}}
+}
+
+\def\small{ \def\style{small}
+\line{}\nointerlineskip \hsize=3.5 true in
+\setbox0=\hbox{\ninepoint 15 Old Orchard Lane}
+\longindentation=\hsize \advance\longindentation by -\wd0
+\def\address{\beginlinemode \getaddress}
+\home \def\style{small home}
+}
+
+\def\plain{ \def\style{plain}
+\hsize=6.5 true in
+\def\letterhead{\pageno=1 \hrule height 0pt \vskip 1 true in
+%\ninepoint \line{\hss\returnaddress}
+\elevenpoint \bigskip{\leftskip=\longindentation \today\par} \bigskip
+}
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+\name\par\title\par
+}
+\def\returnaddress{\name\par
+Dept. of Computer Science\par
+Princeton University\par
+Princeton, NJ 08544\par}
+}
+
+\def\princeton{ \def\style{princeton}
+\hsize=6.5 true in \nolabel
+\def\letterhead{\pageno=1 \hrule height 0pt \vskip 1 true in
+%\def\letterhead{
+%{
+%\font\bigrm=psmtimr at 16pt
+%\font\timesbold=psmtimb at 12pt
+%\vbox{}\kern-4pc
+%\bigrm Princeton University
+%\quad\timesbold Department of Computer Science\par}
+%\bigskip\bigskip
+%\ninepoint \line{\hss
+%\vbox{\normalbaselineskip=10pt \normalbaselines \halign{####\hfil\cr
+%Professor \name\cr
+%Department of Computer Science\cr
+%Princeton University\cr
+%Princeton, NJ 08540 U.S.A.\cr
+%Telephone (609) 258-5598\cr
+%\tt drh@princeton.edu\cr
+%}}}\bigskip
+\elevenpoint \bigskip{\leftskip=\longindentation \today\par} \bigskip
+}
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+\name\par\title\par
+}
+\def\returnaddress{Prof.~\name\par
+Dept. of Computer Science\par
+Princeton University\par
+Princeton, NJ 08544\par}
+}
+
+\def\tarjan{ \def\style{princeton}
+\hsize=6.625 true in
+\def\secy{me} \def\refid{ret/\secy}
+\def\name{Robert E.~Tarjan}
+\def\title{James S.~McDonnell Distinguished\par University Professor}
+\def\letterhead{\pageno=1 \hrule height 0pt \vskip 1 true in
+\elevenpoint \bigskip{\leftskip=\longindentation \today\par} \bigskip
+}
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+\name\par\title\par
+}
+\def\returnaddress{Prof.~\name\par
+Dept. of Computer Science\par
+Princeton University\par
+Princeton, NJ 08544\par}
+}
+
+\def\arizona{ \def\style{arizona}
+\hsize=6.625 true in
+\def\letterhead{\pageno=1 \hrule height 0pt \vskip 1 true in
+\ninepoint \line{\hss
+\vbox{\normalbaselineskip=10pt \normalbaselines \halign{####\hfil\cr
+Professor \name\cr
+Department of Computer Science\cr
+The University of Arizona\cr
+Tucson, Arizona 85721 U.S.A.\cr
+Telephone (602) 621-6610\cr
+\sl CSNet\/\rm: \tt drh@arizona\rm, \sl uucp\/\rm: \tt...!arizona!drh\cr
+}}}
+\elevenpoint \bigskip{\leftskip=\longindentation \today\par} \bigskip
+}
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+\name\par\title\par
+}
+\def\returnaddress{Prof.~\name\par
+Dept. of Computer Science\par
+The University of Arizona\par
+Tucson, AZ 85721\par}
+}
+
+\def\arizonamemo{ \def\style{arizona memo}
+\parindent=0pt
+\font\fourteenrm=cmr10 scaled 1440
+\def\letterhead{{\parskip=0pt \parindent=4pc
+\vbox{}\kern-4pc
+\fourteenrm THE UNIVERSITY OF ARIZONA
+\vskip 3pt
+\twelvepoint TUCSON, ARIZONA 85721
+\vskip 1pc \tenpoint DEPARTMENT OF COMPUTER SCIENCE\par}
+\hskip-3pc\special{psfile=/u/drh/lib/seal.ps}
+\vskip .75pc
+\elevenpoint \setbox0=\hbox{\sc SUBJECT:\quad} \longindentation=\wd0
+\bigskip \line{\hbox to \longindentation{\sc TO:\hfil}\relax
+	\addressee\relax\hfill \sc DATE:\rm\quad\today}
+\medskip \line{\hbox to \longindentation{\sc FROM:\hfil}\from\hfil}
+\medskip \line{\hbox to \longindentation{\sc SUBJECT:\hfil}\relax
+	\subject\relax\hfil}\bigskip
+}
+\def\annotations{\bigskip{\tenpoint
+	\ifnum\encl>0 encl: \number\encl\par \fi
+	\ifx\cc\relax \else {\setbox0=\hbox{cc:\enspace} \parindent=\wd0
+	  \noindent cc:\enspace \cc\par} \fi}}
+\let\closing=\relax \nolabel \let\returnaddress=\relax
+\let\address=\relax
+}
+
+\def\princetonmemo{ \def\style{princeton memo}
+\parindent=0pt
+\font\fourteenrm=cmr10 scaled 1440
+\def\letterhead{\pageno=1{\parskip=0pt
+\vbox{}\kern-4pc
+\fourteenrm Princeton University
+\quad\tenbf Department of Computer Science\par}
+\bigskip
+\elevenpoint \setbox0=\hbox{\sc SUBJECT:\quad} \longindentation=\wd0
+\bigskip \line{\hbox to \longindentation{\sc TO:\hfil}\relax
+	\addressee\relax\hfill \sc DATE:\rm\quad\today}
+\medskip \line{\hbox to \longindentation{\sc FROM:\hfil}\from\hfil}
+\medskip \line{\hbox to \longindentation{\sc SUBJECT:\hfil}\relax
+	\subject\relax\hfil}\bigskip
+\bigskip\hrule\vskip 2pt\hrule\bigskip\bigskip
+}
+\def\annotations{\bigskip{\tenpoint
+	\ifnum\encl>0 encl: \number\encl\par \fi
+	\ifx\cc\relax \else {\setbox0=\hbox{cc:\enspace} \parindent=\wd0
+	  \noindent cc:\enspace \cc\par} \fi}}
+\let\closing=\relax \nolabel \let\returnaddress=\relax
+\let\address=\relax
+}
+
+\def\Software{{\sl Software\/}}
+\def\SPE{{\sl Software---Practice \& Experience\/}}
+\def\spe{ \def\style{spe}
+\vsize=9 true in \hoffset=12 true pt
+\let\makeheadline=\relax \nolabel
+\font\bigrm=cmr10 scaled \magstep2 % 14.4pt type
+\def\Software{{\sl Software\/}}
+\def\SPE{{\sl Software---Practice \& Experience\/}}
+\def\copyright{Enclosed is a copy of the Publishing Agreement that all
+authors are requested to sign by the time their papers are accepted for
+publication in John Wiley \& Sons journals. Please sign the Agreement
+as indicated and return it to me. You may sign on behalf of your
+co-authors or have them sign the enclosed copies and return them to me.}
+\def\thanks{Thank you for submitting your paper for consideration.
+Your interest in \Software\ is appreciated.}
+\def\networks{If you have access to any of the networks listed above,
+feel free to submit your report or contact me via a network.\ }
+\def\letterhead{%\special{ps: overlay /u/drh/lib/spehead.ps on}%
+\let\oldpagebody=\pagebody
+\def\pagebody{\oldpagebody\special{ps: overlay off}}
+\hrule height 0pt \vskip 1.8 true in
+\elevenpoint {\leftskip=\longindentation \today\par} \bigskip}
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+David R.~Hanson\par
+Editor\par
+}
+\def\returnaddress{Prof. David R.~Hanson\par
+Dept. of Computer Science\par
+Princeton University\par
+Princeton, NJ 08544\par}
+}
+
+\def\ida{ \def\style{ida}
+\hoffset=-.25 true in \hsize=6.125 true in
+\def\letterhead{\pageno=1 \hrule height 0pt \vskip 1 true in
+\elevenpoint {\leftskip=\longindentation \today\par} \bigskip
+}
+\def\closing{\endmode \medskip \leftskip=\longindentation
+Sincerely,\par
+\vskip .5 true in
+David R. Hanson\par
+Research Staff Member\par
+}
+\def\returnaddress{David R. Hanson\par
+Institute for Defense Analyses\par
+Thanet Road\par
+Princeton, NJ 08540\par}
+}
+
+\let\dept=\princeton
+\let\memo=\princetonmemo
+\let\date=\today

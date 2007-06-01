@@ -1,0 +1,30 @@
+(lines beginning with `-' indicate the bug is fixed.)
+
+-1.  Two for in loops in editor.S don't work.
+
+2.  t[2][3] = 4 gives an error, and doesn't set t[2] or t[3].  It works
+    if t[2] already exists.
+
+-3.  the program "if (x) y = 3" assigns 3 to y even is x is void.
+
+-4.  the program "while (1) write(1)" gets evaluation stack overflow.
+
+-5.  the program "for(;;)write(1)" loops.
+
+-6.  the expression 6 < 5 < 7 returns 7!
+
+-7.  the program "for(;;)write(1)" gives evaluation stack overflow (after
+    bug #5 was fixed).
+
+8.  need "not" operator to avoid "if(expr)0 else break" kludge
+
+9.  bug9.S gets a bus error
+
+10. type(1<0) is not "void", the manual notwithstanding
+
+11. bug11.S responds to input line "cd" with "12error 107...".
+    yet the stmt is correct, and worse, it should not be executed.
+
+12.  Fixing bugs 4, 5, and 7 introduced another bug -- values
+     of expressions outside procedures are not printed.   Problem
+     is indiscriminate use of o_base.

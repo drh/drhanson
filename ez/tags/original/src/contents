@@ -1,0 +1,16 @@
+trap "rm -f /tmp/c$$" 1 15
+for i
+do
+	echo -n "$i:+"
+	sed -e '2,$d' -e 's/\/\*[ 	]*//' -e 's/[ 	]*\*\///' \
+		-e 's/ez: //' -e 's/ez //' $i
+done | awk -F+ '{ printf "%-15s%s\n", $1, $2 }' | enscript -h Files
+grep -n ')$' $* | sed -e '/[ 	]if/d' -e '/[ 	]for/d' -e '/[ 	]while/d' \
+	-e '/[ 	]else/d' -e '/#define/d' -e '/[=+><-]/d' \
+	-e 's/^"\(.*\)".*line \([0-9]*\):[	 ]*\(.*\)$/\1:\2:\3/' >/tmp/c$$
+awk -F: ' { printf "%s, %d	%s\n", $1, $2, $3 }' </tmp/c$$ | sort |
+	enscript -h Contents
+sed -e 's/\([_a-zA-Z0-9]*(.*)\)/:\1/' </tmp/c$$ | sort -t: +3 |
+	awk -F: ' { printf "%s, %d	%s\n", $1, $2, $4 }' |
+	enscript -h Contents
+rm -f /tmp/c$$

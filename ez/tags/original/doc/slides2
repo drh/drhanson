@@ -1,0 +1,289 @@
+.ds CM
+.ds HM 2i
+.ds LF \s8Foil %\s0
+.ds CF
+.ds RF \s8\*(DY\s0
+.de SS
+.br
+.ps \\$1
+.nr PS \\$1
+.vs \\$2
+.nr VS \\$2
+..
+.SS 16 19
+.de SL
+.bp
+.ce
+\s18\\$1\s0
+.sp .5i
+.nf
+.ta \w'\(bu\0\0'u +.5i +.5i +.5i +.5i
+..
+.de BU
+.sp .5i
+\(bu	\\$1
+.ta .5i +.5i +.5i +.5i +.5i +.5i +.5i +.5i
+..
+.de PS
+.ta .5i +.5i +.5i +.5i +.5i +.5i +.5i +.5i
+.ft H
+..
+.de PE
+.ft R
+.ta \w'\(bu\0\0'u +.5i +.5i +.5i +.5i
+..
+.de M
+.nr PQ \\n(.f
+.if !"\\$1"" \\$3\\f(H\\$1\\f\\n(PQ\\$2
+.if "\\$1"" .ft H
+..
+.ds EZ \fI\s-2EZ\s0\fP
+.DS L
+.ce 100
+\s+2Integrating Operating Systems and Languages\s0
+.sp 2
+Christopher W. Fraser
+David R. Hanson
+.sp 2
+Department of Computer Science
+The University of Arizona
+Tucson, Arizona
+.ce 0
+.DE
+.SL "General Goals"
+\(bu	Integrate traditionally distinct services
+		languages and operating systems
+		programming and command languages
+		editors and command languages
+		editors and debuggers
+.sp
+\(bu	Raise the \fIsemantic\fP level of interaction
+		avoid irrelevant intrusion of technology
+		technology-independent computing
+.sp
+\(bu	Develop complete environments for personal computers
+.sp
+\(bu	Develop very high-level programming languages
+		e.g. Icon
+.sp
+\(bu	Experiment with implementation strategies
+		e.g. lazy evaluation, applicative data structures
+.SL "The \*(EZ Language"
+\(bu	A high-level string-processing language
+		ancestors include SNOBOL4, SL5, Icon
+.sp
+\(bu	Basic linguistic attributes
+		late binding times
+		run-time flexibility
+		dynamic typing and automatic conversions
+		heterogenous structures
+.sp
+\(bu	Control flow relies on \fIabsence\fP of values
+.sp .2v
+.M
+		for (i = 1; i <= 10; i += 1)
+			sum += x[i]
+.R
+.sp .2v
+	i.e., a simplification of Icon sequences
+.sp
+\(bu	A `persistent' environment like APL
+		i.e. infinite lifetimes
+.sp
+\(bu	Type `fusion': treat conventionally distinct types as single types
+.TS
+center;
+li li
+l l.
+\*(EZ type	Traditional types
+.sp .2v
+numeric	integer, real
+string	string, file
+procedure	procedure, program,
+	object file, executable file
+table	array, record
+	associative table, directory
+.TE
+.SL "Linguistic Encapsulation of System Services"
+\(bu	Strings are files
+.sp .2v
+.PS
+		message = "I'll return in 10 minutes"
+.PE
+.sp .2v
+	\fHmessage\fP is the `file name'
+.br
+	\fH"I'll return in 10 minutes"\fP is the `contents'
+.sp
+.TS
+center ;
+li li
+lfH l .
+expression	function
+.sp .2v
+message	print the `file'
+size(message)	length of the `file'
+message ~= oldmessage	compare `files', print old version
+message[16:18]	`random access' (prints \fH10\fP)
+message[16:18] += 30	?
+.TE
+.PE
+\(bu	Tables (associative arrays) are directories
+.PS
+		paper["title"] = "Integrating Operating Systems and Languages"
+		paper["authors"] = cwf || "\en" || drh
+.PE
+.sp .2v
+	notation \fIe.id\fP is equivalent to \fIe\fR["\fIid\^\fR"]
+.sp .2v
+.PS
+		paper[1].heading = "Introduction"
+		paper[1].body = "This paper describes ...		
+		paper[1].top = paper
+.PE
+.sp
+	`directory' operations:
+.sp .2v
+.PS
+		for (i in paper) write(i)
+.sp
+		remove(paper[1], "top")
+.PE
+.SL "U\s-2NIX\s0 Directory Primitives"
+.PS
+procedure mkdir(name)
+	WorkingDirectory[name][".."] = WorkingDirectory
+	WorkingDirectory[name]["."] = WorkingDirectory[name]
+end
+.sp
+procedure chdir(name)
+	WorkingDirectory = WorkingDirectory[name]
+end
+.sp
+procedure ls(name) local i, list
+	list = ""
+	if (name) {
+		for (i in name)
+			list = list || " " || i
+		return (list)
+		}
+	return (ls(WorkingDirectory))
+end
+.sp
+procedure chdir(name)
+	if (WorkingDirectory[name]) {
+		WorkingDirectory[name]["path"] = WorkingDirectory
+		WorkingDirectory = WorkingDirectory[name]
+		}
+end
+.PE
+.SL "`Exotic' Conversions"
+\(bu	Tables to strings: concatenate elements
+.sp
+\(bu	Strings to tables: create 1-element table
+.sp
+\(bu	Procedures to strings: source code
+.sp .2v
+.M
+		ls
+.R
+	prints
+.PS
+		procedure ls(name) local i, list
+			list = ""
+			if (name) {
+				for (i in name)
+					list = list || " " || i
+				return (list)
+				}
+			return (ls(WorkingDirectory))
+		end
+.PE
+.sp
+\(bu	Strings to procedures: compile as if source code
+.sp .2v
+.M
+		for (i in work)
+			work[i]()
+.R
+.sp .2v
+	compilation performed as necessary
+.SL "Scope Rules"
+\(bu	Compiler `symbol tables' are \*(EZ tables
+.sp
+\(bu	The value of \fHroot\fP is current table, e.g.,
+.sp .2v
+.M
+		message = "I'll return in 10 minutes"
+.R
+.sp .2v
+	is equivalent to
+.sp .2v
+.M
+		root["message"] = "I'll return in 10 minutes"
+.R
+.sp
+\(bu	compiler searches \fHroot, root[".."], root[".."][".."],\fP etc.;
+	path can be changed arbitrarily at any time
+.sp
+\(bu	Table manipulation can be used to hide information
+.SL "An \*(EZ Editor"
+\(bu	Conventional display editor based on Irons model written in \*(EZ
+.sp
+\(bu	Implementation similar to EMACS:
+		keystrokes interpreted by decoding tree
+		leaves are editing functions
+.sp .2v
+		\*(EZ tables form decoding tree
+		\*(EZ procedures implement editing functions
+.sp
+\(bu	Editor edits \fIall\fP \*(EZ types. not just text
+		common user interface
+		primitive routine for strings and tables
+		numbers are edited as strings and re-converted
+		procedures are edited as strings and re-compiled
+.sp
+\(bu	Editing arbitrary structure: recursively call the editor
+		make the editor an editing function in decoding tree
+.sp
+\(bu	Editing the editor
+		edit the decoding tree to change keystroke interpretation
+		edit the editing functions to suit taste
+		instant gratification!
+.sp
+\(bu	`execute' command
+		\*(EZ function to compile and call selected text
+		conversions simplify implementation
+.sp
+\(bu	Editor will become primary user interface
+		editing tables subsumes `file system' utilities
+		selecting and executing procedures subsumes shells
+.sp
+\(bu	Size: <600 lines of \*(EZ
+.SL Implementation
+\(bu	Data:
+		values represented by fixed-size descriptors
+		some descriptors point to pages
+.sp
+\(bu	Multiple representations:
+		details of table representation depend on contents
+.sp
+\(bu	Virtual address space:
+		all addresses are virtual addresses
+		paging, caching handled at lowest level
+		equivalent of \fIsync\fP saves state
+.sp
+\(bu	Code:
+		compiler generates simple interpretative code
+		procedures represented by (source, code) pair
+		procedures are simply values (i.e. paged, etc.)
+.sp
+\(bu	Garbage collection:
+		off-line collector
+		simplifies implementation and representation details
+		slow
+.sp
+\(bu	Size: wc -l *.c
+.sp .2v
+		...
+		4758	total

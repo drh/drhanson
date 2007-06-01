@@ -1,0 +1,16 @@
+procedure wc(s)
+	local nl, nw, i
+
+	wordchars = ascii[upto(" ", ascii)+1:-1]
+	nl = nw = 0
+	while (i = upto(wordchars||"\n", s))
+		if (s[i:i+1] == "\n") {
+			nl = nl + 1
+			s = s[i+1:0]
+			}
+		else {
+			nw = nw + 1
+			s = s[many(wordchars, s, i):0]
+			}
+	return (nl || " " || nw)
+end

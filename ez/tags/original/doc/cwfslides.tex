@@ -1,0 +1,361 @@
+\input macros
+\magnification=\magstep4
+\voffset=1 true in
+\font\bigrm=amr10 at 12pt \font\eightit=ami10 at 8pt
+\font\footrm=amr8 at 8 true pt \font\pt=amtt10
+\footline={\footrm Slide \folio\hfill\today}
+\def\Bullet{\bigskip$\bullet$\enspace\enspace}
+\def\NewPage{\vfill\eject}
+\def\EZ{{\it EZ\/}}
+\catcode`\^^I=\active
+\def^^I{\hskip .4 true in}
+\parindent=0pt \catcode`\~=12
+\def\center{\leftskip=0pt plus 1fil \rightskip=\leftskip \parfillskip=0pt}
+\def\program{\begingroup\medskip\pt\catcode`\{=12 \catcode`\}=12}
+\def\endprogram{\endgroup}
+{\obeylines\center
+{\bigrm Integrating Languages
+and Operating Systems}
+\vskip 1 true in
+Christopher W. Fraser
+David R. Hanson
+\medskip
+Department of Computer Science
+University of Arizona
+}
+
+\NewPage
+\obeylines
+\centerline{\bigrm Motivations}
+\Bullet Integrate traditionally distinct services:
+		Languages and operating systems.
+		Programming and command languages.
+		Editors and file managers.
+		editors and debuggers.
+
+\Bullet Raise the level of interaction:
+		Implementation manages memory hierarchy.
+		Cast system services as language facilities.
+
+\Bullet Develop:
+		Very high-level programming languages.
+		Environments for future languages.
+		Environments for personal computers.
+
+\NewPage
+\centerline{\bigrm The \EZ\ Language}
+\Bullet An environment like APL, Lisp, Smalltalk.
+	String-processing like SNOBOL4, SL5, Icon.
+
+\Bullet Basic linguistic attributes:
+		Late binding times.
+		Dynamic typing, automatic conversions.
+		Heterogenous structures.
+
+\Bullet Few types:  numbers, strings, procedures, tables.
+	Seems like fewer yet with automatic conversions.
+
+\NewPage
+\centerline{\bigrm Type Integration}
+\Bullet Memory lasts:
+		Bindings persist until overwritten.
+		Nothing is lost by logging off.
+\Bullet Implementation manages memory hierarchy:
+		Swaps values in and out as necessary.
+		Like a workspace without explicit commands.
+\medskip
+\tabskip=0pt \halign to \hsize{#\hfill\enspace&#\hfill\cr
+		\it \EZ\ Type&\it Traditional Types\cr
+		number&integer\cr
+		&real\cr
+		string&string\cr
+		&text file\cr
+		procedure&procedure\cr
+		&program\cr
+		&object file\cr
+		&executable file\cr
+		table&array\cr
+		&record\cr
+		&symbol table\cr
+		&directory\cr
+		&activation record\cr}
+
+\NewPage
+\centerline{\bigrm Text Files}
+\Bullet Text files are just strings.
+\program
+		message = "Back in 5 minutes"
+\endprogram
+\medskip
+		The ``file name'' is {\pt message}.
+		The ``contents'' are {\pt "Back in 5 minutes"}
+
+\Bullet Expressions perform ``file'' operations:
+\medskip
+\tabskip=0pt \halign to \hsize{\pt#\hfill\enspace&#\hfill\cr
+		\it expression&\it function\cr
+		message&print ``file''\cr
+		size(message)&length of ``file''\cr
+		message == oldmessage&compare ``files''\cr
+		message[9!1]&``random access''\cr
+		message[9!1] += 10&N/A\cr}
+
+\NewPage
+\centerline{\bigrm Tables}
+
+\Bullet Tables are an associative memory.
+		Like SNOBOL4, Icon tables, AWK arrays.
+		Heterogenous values {\it and\/} indices.
+		Created automatically by subscripting.
+\program
+		paper["title"] = "Integrating ...
+		paper["authors"] = cwf || " " || drh
+
+		paper[1].heading = "Introduction"
+		paper[1].body = "EZ is a software...	
+		paper[1].top = paper
+\endprogram
+\medskip
+		Note circular link.
+
+\Bullet Records:  {\pt e.id} is equivalent to {\pt e["id"]}
+\program
+		paper.title = "Integrating ...
+		paper.authors = cwf || " " || drh
+\endprogram
+
+\NewPage
+\centerline{\bigrm Directories}
+\Bullet Directories are just tables:  {\pt usr.spool.mail.cwf}
+\program
+		procedure chdir(name)
+			WorkDir = WorkDir[name]
+		end
+\medskip
+		procedure ls(name) local i, list
+			list = ""
+			for (i in WorkDir[name])
+				list = list || " " || i
+			return list[2:0]
+		end
+\medskip
+		procedure mkdir(name)
+			WorkDir[name][".."] = WorkDir
+			WorkDir[name]["."] = WorkDir[name]
+		end
+\medskip
+		procedure rm(name)
+			remove(WorkDir, name)
+		end
+\endprogram
+
+\NewPage
+\centerline{\bigrm Procedures}
+\Bullet Procedure ``declarations'' are assignments.
+\program
+		procedure ls() local i, s ... end
+\endprogram
+\medskip
+		is equivalent to
+\program
+		ls = procedure () local i, s...end
+\endprogram
+
+\Bullet Procedures are just constants.
+\program
+		for (i = 32; i < 128; i = i + 1)
+			keymap[ascii[i+1!1]] = 
+				procedure(c) overstrike(c) end
+\medskip
+		addmap(
+			"$\backslash$eS", 
+			procedure()
+				curmov(cx-1, cy)
+				delchr()
+			end,
+			keymap)
+\endprogram
+
+\NewPage
+\centerline{\bigrm Compilation}
+\Bullet Conversion to string returns source code.
+\medskip
+\tabskip=0pt \halign to \hsize{#\hfill\enspace&\pt#\hfill\cr
+		Input:&ls\cr
+		Output:&procedure ls(t) ... end\cr}
+
+\Bullet Conversion from string is compilation.
+\tabskip=0pt \halign to \hsize{#\hfill\enspace&\pt#\hfill\cr
+		Input:&"1+2"()\cr
+		Output:&3\cr}
+
+\Bullet Conversions are invertible,
+	so compilation is just an optimization (almost).
+
+\NewPage
+\centerline{\bigrm Scope Rules}
+\Bullet Compiler ``symbol tables'' are \EZ\ tables.
+
+\Bullet The value of {\pt root} is the current symbol table.
+\program
+		message = "Back in 5 minutes"
+		root.message = "Back in 5 minutes"
+		root["message"] = "Back in 5 minutes"
+\endprogram
+
+\Bullet Compiler searches the ``path''
+		 {\pt root, root[".."], root[".."][".."],}\dots
+		 If name's not found, it's entered in {\pt root}.
+
+\Bullet Path can be changed arbitrarily any time:
+		Nested scope
+		Smalltalk inheritance
+		Unix search lists
+
+\Bullet Paging out {\pt root} saves state.
+
+\Bullet Garbage collected off-line.
+
+\NewPage
+\centerline{\bigrm Information Hiding}
+\Bullet Subsetting built-ins:
+\program
+		root[".."] = NoviceFunctions
+\endprogram
+
+\Bullet Protecting globals:
+\program
+		root = ["previous": root]
+\medskip
+		s = 0
+		previous.random = procedure (n)
+			s = (s*12621 + 21131)\%10000
+			return (s*n/10000 + 1)
+		end
+\medskip
+		root = previous
+\endprogram
+
+\NewPage
+\centerline{\bigrm Resumption Points}
+\Bullet Resumption points identify executable fragments
+\program
+		\# make decoding tree mapping s to f
+		procedure mkmap(s, f) local t
+			$^1$
+			$^2$if ($^3$size(s) == 0)
+				$^4$return $^5$f
+			else $\{$
+				$^6$t[s[1!1]] = mkmap(s[2:0], f)
+				$^7$return $^8$t
+				$\}$
+			$^9$
+		end
+\endprogram
+\Bullet Subscripting procedures:
+		{\pt mkmap[3] == "size(s) == 0"}
+\Bullet Substringing procedures (automatic widening):
+		{\pt i = find("z", mkmap)!1]
+		mkmap[i!1] == "size(s) == 0"}
+\Bullet Changing procedures (automatic recompilation):
+\program
+		mkmap[3] ||= " | type(s) ~= 'string'"
+\endprogram
+
+\NewPage
+\centerline{\bigrm Procedure Activations}
+
+\Bullet Procedure activations are just tables.
+
+\Bullet Hold formals, locals, state information.
+		{\pt ls(m) == "s f t Procedure Resumption"}
+
+\Bullet Create by explicit table assignment:
+		{\pt m.Procedure = mkmap
+		m.Resumption = 1}
+	or explicit conversion from procedure to table:
+		{\pt m = table(mkmap)}
+
+\Bullet Invoke like procedures:
+		{\pt m("a", overstrike)}
+	or
+		{\pt m.s = "a"
+		m.f = overstrike
+		m()}
+
+\Bullet State entries can be changed arbitrarily:
+		Change {\pt Resumption} to restart elsewhere.
+		Change {\pt Procedure} to edit/debug the code.
+
+\NewPage
+\centerline{\bigrm An \EZ\ Editor}
+\Bullet Like EMACS:
+		Decoding tree interprets keystrokes.
+		Inside nodes are tables, leaves are functions.
+\Bullet Edits strings and tables (i.e., everything).
+		Edits table keys, string values.
+		One front end, two back ends.
+		Subsumes file, directory management utilities.
+\medskip
+\tabskip=0pt \halign to \hsize{\it#\hfill\enspace&\pt#\hfill\cr
+		{\it Input}&{\it Display}\cr
+		{\pt edit(z19)}&keymap\cr
+		&xmax\cr
+		&ymax\cr
+		&\cr
+		down, down, edit&24\cr
+		&\cr
+		exit, up, up&$\backslash$b\cr
+		&$\backslash$e ...\cr
+		&\cr
+		edit&procedure()\cr
+		&	curmov(cx-1, cy)\cr
+		&	delchr()\cr
+		&end\cr}
+
+\NewPage
+\centerline{\bigrm Debugging}
+\Bullet Debugging is editing activations.
+
+\Bullet Examine and set values as above.
+
+\Bullet Walk the stack to reach other activations.
+
+\Bullet Breakpoints:  
+		Recursively edit {\pt Procedure} entry.
+		Insert {\pt edit(Self)} at breakpoint.
+		Resume execution.
+
+\Bullet Execute one resumption point at cursor:
+		{\pt x.Procedure = x.Procedure[f(cx,cy)!1]
+		x.Resumption = 1
+		x()}
+	Save, restore old procedure, resumption point.
+
+\Bullet Integrates editing, execution, debugging.
+
+\NewPage
+\centerline{\bigrm Future Work}
+\Bullet Type integration:
+		Strings and tables:
+			Applicative table operations.
+			Non-applicative string operations.
+
+\Bullet High-level programming language facilities:
+		Resumption points.
+		Alternative representations for activations.
+		Operations on procedures and activations.
+
+\Bullet Implementation:
+		Multiple representations for strings, tables.
+		Lazy evaluation.
+
+\Bullet Linguistic encapsulation of system services:
+		Asynchronous processes.
+		Interrupts and signals.
+		Interactive devices.
+		Sharing.
+
+\Bullet Development on personal systems:
+		\EZ\ workstation.
+\bye

@@ -1,0 +1,8 @@
+- make a copy of initial root
+- implement t(), where t is a table
+- implement f[...], where f is a function
+- implement initial values for locals
+- rearrange assignment code.
+- not all operators handle VOID correctly (e.g. ||)
+- implement position-independent procedure parameters (foo(arg=exp))
+- fix O_QUIT code so it's emitted only if necessary

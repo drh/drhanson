@@ -1,0 +1,34 @@
+procedure main()
+while (1) {
+   write ("---------------------\n")
+   write ("|     Main Menu     |\n")
+   write ("|                   |\n")
+   write ("|b:     box         |\n")
+   write ("|q:     quit        |\n")
+   write ("|                   |\n")
+   write ("---------------------\n")
+   write("\nEnter a letter: ")
+   cmd = read()
+   if (cmd == "b")
+      box()
+   if (cmd == "q")
+      break
+   }
+end
+
+procedure box()
+write("Draw a Box\nenter length of side: ")
+n = read()
+for(i = 1; i <= n; i = i + 1)
+   write("-")
+write("\n")
+for(j = 1; j <= n; j = j + 1) {
+   write("|")
+   for(i = 1; i < n-1; i = i + 1)
+      write(" ")
+   write("|\n")
+   }
+for(i = 1; i <= n; i = i + 1)
+   write("-")
+write("\n")
+end

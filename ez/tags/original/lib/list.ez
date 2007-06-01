@@ -1,0 +1,98 @@
+for (i = 1; i <= 10; i = i + 1) test[i] = "line " || i
+
+cx = cy = 1
+xmax = 80
+ymax = 10
+
+# home, down, up, right, left, enter commands
+keymap["h"] = procedure() curmov(1, 1) end                   
+keymap["d"] = procedure() curmov(cx, cy+1) end               
+keymap["u"] = procedure() curmov(cx, cy-1) end               
+keymap["r"] = procedure() curmov(cx+1, cy) end               
+keymap["l"] = procedure() curmov(cx-1, cy) end               
+keymap["e"] = procedure() edit(ctable[cy]) end
+
+# insert/delete character/line commands
+keymap["ic"] = procedure() 
+   if (check() & cx <= size(ctable[cy])) 
+      ctable[cy][cx!0] = " " 
+end
+keymap["dc"] = procedure() 
+   if (check() & cx <= size(ctable[cy])) 
+      ctable[cy][cx!1] = "" 
+end 
+keymap["il"] = procedure()                                    
+   if (check()) {
+      ctable[cy] = pad(ctable[cy], cx)
+      ctable = ctable[1:cy] || ctable[cy:size(ctable)]
+      ctable[cy][cx:0] = ""
+      ctable[cy+1][1:cx] = ""
+      }
+end
+keymap["dl"] = procedure foo() 
+   if (check()) {
+      ctable[cy] = pad(ctable[cy], cx)[1:cx] || ctable[cy+1]
+      ctable = ctable[1:cy] || ctable[cy+2:size(ctable)]
+      }
+end
+
+# overstrike commands
+keymap["x"] = procedure(c) 
+   if (check()) {
+      ctable[cy] = pad(ctable[cy], cx)
+      ctable[cy][cx!1] = c
+      curmov(cx+1, cy)
+      } 
+end
+
+# check - check that current line is a string
+procedure check()
+   if (type(ctable[cy]) == "table") { 
+      error()
+      return 
+      }
+   return (1)
+end
+
+# curmov - move the cursor to (cx,cy)
+procedure curmov(x, y)
+   if (x <= xmax) cx = x
+   if (y <= ymax) cy = y
+end
+
+# estring - convert v to string of at most xmax characters
+procedure estring(v)
+   local s
+
+   if (size(s = string(v)) > xmax) s[xmax-3:0] = "..."
+   return (s)
+end
+
+# error - signal illegal editing command
+procedure error()
+   write(ascii[8!1])  # ring bell
+end
+
+# pad - pad s to length l
+procedure pad(s, l)
+   if (l > size(s))
+      return (pad(s||" ", l-1))
+   return (s)
+end
+
+# refresh - redraw screen to reflect current state
+procedure refresh()
+   for (i = 1; i <= ymax; i = i + 1) 
+      write(estring(ctable[i]), "\n")
+   write("(", cx, ",", cy, ")")
+end
+
+procedure edit(v) local s
+   ctable = v
+   refresh()
+   while (s = read())
+      if (keymap[s]) {
+         keymap[s](s)
+	 refresh()
+	 }
+end

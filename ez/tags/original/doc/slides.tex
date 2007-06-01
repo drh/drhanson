@@ -1,0 +1,428 @@
+\input macros
+\magnification=\magstep4
+\voffset=1 true in
+\font\bigrm=amr10 at 12 pt \font\eightit=ami10 at 8pt
+\font\footrm=amr8 at 8 true pt \font\pt=amtt10
+\newif\ifLong
+\footline={\footrm Slide \folio\ifLong\hfill Long Version\fi\hfill\today}
+\def\Bullet{\bigskip$\bullet$\enspace\enspace}
+\def\NewPage{\vfill\eject\Longfalse}
+\def\EZ{{\it EZ\/}}
+\catcode`\^^I=\active
+\def^^I{\hskip .4 true in}
+\parindent=0pt \catcode`\~=12
+\def\center{\leftskip=0pt plus 1fil \rightskip=\leftskip \parfillskip=0pt}
+\def\program{\begingroup\medskip\pt\catcode`\{=12 \catcode`\}=12}
+\def\endprogram{\endgroup}
+{\obeylines\center
+{\bigrm High-Level Language Facilities
+for Low-Level Services}
+\vskip 1 true in
+Christopher W. Fraser
+
+Department of Computer Science
+The University of Arizona
+\vskip .8 true in
+David R. Hanson
+
+Department of Electrical Engineering
+and Computer Science
+Princeton University
+}
+\NewPage
+\obeylines
+\centerline{\bigrm High-Level Computing Environment}
+\Bullet Integrate traditionally distinct services
+		languages and operating systems
+		programming and command languages
+		editors and command languages
+		editors and debuggers
+
+\Bullet Raise the {\it semantic\/} level of interaction
+		avoid intrusion of irrelevant technology
+		technology-independent computing
+
+\Bullet Develop environments for personal computers
+		environments for {\it future\/} languages
+
+\Bullet Develop very high-level programming languages
+
+\Bullet Approach is {\it language-based}
+		cast ``system services'' as language facilities
+\NewPage
+\centerline{\bigrm The \EZ\ Language}
+\Bullet A high-level string-processing language
+		ancestors are SNOBOL4, SL5, Icon
+
+\Bullet Basic linguistic attributes
+		late binding times
+		run-time flexibility
+		dynamic typing, automatic conversions
+		heterogenous structures
+
+\Bullet Control flow relies on {\it absence\/} of values
+\program
+		for (i = 1; i <= 10; i += 1)
+			sum += x[i]
+\endprogram
+\medskip
+		i.e., a simplification of Icon sequences
+
+\Bullet A ``persistent'' memory
+		values have indefinite lifetimes
+		accessibility determines lifetimes
+		technology independent:
+			``computers have memory''
+
+\Bullet Few types for conventionally distinct types
+		numeric, string, procedure, table
+\NewPage
+\centerline{\bigrm Linguistic Encapsulation of System Services}
+\Bullet Values exist until changed
+
+\Bullet Strings are files
+\program
+		message = "I'll return soon"
+\endprogram
+\medskip
+		{\pt message} is the ``file name''
+		{\pt "I'll return soon"} is the ``contents''
+
+\Bullet Tables (associative arrays) are directories
+\program
+		paper["title"] = "High-Level ...
+		paper["authors"] = cwf || "$\backslash$n" || drh
+\endprogram
+
+\Bullet Tables are created automatically by subscripting
+
+\Bullet {\pt e.id} is equivalent to {\pt e["id"]}
+\NewPage\Longtrue
+\centerline{\bigrm System Operations}
+\Bullet \EZ\ expressions perform ``file'' operations
+\medskip
+\tabskip=0 pt
+\halign to \hsize{\pt#\hfill\enspace&#\hfill\cr
+\it expression&\it function\cr
+message&print ``file''\cr
+size(message)&length of ``file''\cr
+message ~= oldmessage&compare ``files''\cr
+message[6:12]&``random access''\cr
+message[6!1] += 30&?\cr}
+
+\Bullet Tables can be indexed by any value
+\program
+		paper[1].heading = "Introduction"
+		paper[1].body = "$\backslash$EZ is a software...	
+		paper[1].top = paper
+\endprogram
+
+\Bullet \EZ\ fragments perform ``directory'' operations
+\program
+		for (i in paper)
+			s = s || " " || i
+\medskip
+		remove(paper[1], "top")
+\endprogram
+\NewPage
+\centerline{\bigrm U{\rm NIX} Directory Primitives}\Longtrue
+\program
+procedure mkdir(name)
+	WorkDir[name][".."] = WorkDir
+	WorkDir[name]["."] = WorkDir[name]
+end
+\medskip
+procedure chdir(name)
+	WorkDir = WorkDir[name]
+end
+\medskip
+procedure ls(name) local i, list
+	list = ""
+	if (name) {
+		for (i in name)
+			list = list || " " || i
+		return (list[2:0])
+		}
+	return (ls(WorkDir))
+end
+\medskip
+procedure chdir(name)
+	if (WorkDir[name]) {
+		WorkDir[name]["path"] = WorkDir
+		WorkDir = WorkDir[name]
+		}
+end
+\endprogram
+\NewPage
+\centerline{\bigrm Procedures}
+\Bullet Procedure ``declarations'' are assignments
+\program
+		procedure ls(t) local i, s
+			s = ""
+			for (i in t)
+				s = s || "," || i
+			return (s[2:0])
+		end
+\endprogram
+\medskip
+		is equivalent to
+\program
+		ls = procedure (t) local i, s...end
+\endprogram
+
+\Bullet Conversion of procedure to string yields code
+		value of {\pt ls} is {\pt "procedure ls(t) ... end"}
+
+\Bullet Conversion of string to procedure is compilation
+\program
+		for (i in work)
+			work[i]()
+\endprogram
+\NewPage
+\centerline{\bigrm Scope Rules}\Longtrue
+\Bullet Compiler ``symbol tables'' are \EZ\ tables
+
+\Bullet The value of {\pt root} is current table, e.g.,
+\program
+		message = "I'll return soon"
+\endprogram
+\medskip
+		is equivalent to
+\program
+		root["message"] = "I'll return soon"
+\endprogram
+
+\Bullet Compiler searches a ``path''
+		 {\pt root, root[".."], root[".."][".."],}\dots
+
+\Bullet Path can be changed arbitrarily at any time
+\NewPage
+\centerline{\bigrm Information Hiding}\Longtrue
+\Bullet Changing {\pt root}
+\program
+		root[".."] = NoviceFunctions
+\endprogram
+
+\Bullet Changing {\pt root} hides information
+\program
+		root = ["previous": root]
+\medskip
+		s = 0
+		previous.random = procedure (n)
+			s = (s*12621 + 21131)\%10000
+			return (s*n/10000 + 1)
+		end
+\medskip
+		root = previous
+\endprogram
+
+\Bullet {\pt s} is inaccessible
+\NewPage
+\centerline{\bigrm Resumption Points}
+\Bullet Resumption points identify executable fragments
+\begingroup\medskip\pt
+	procedure decode(cmd, keymap)
+		local c, s, t
+
+		$^1$
+		$^2$s = ""
+		$^3$t = keymap
+		$^4$while ($^5$c = cmd[1!1]) $\{$
+			$^6$s = s || c
+			$^7$cmd = cmd[2:0]
+			$^8$if ($^9$type(t[c]) == "procedure") $\{$
+				$^{10}$t[c](s)
+				$^{11}$return $^{12}$(1)
+				$\}$
+			else $^{13}$if ($^{14}$type(t[c]) ~= "table")
+				$^{15}$return $^{16}$
+			$^{17}$t = t[c]
+			$\}$
+		$^{18}$
+	end
+\endprogram
+\NewPage
+\centerline{\bigrm Extracting Resumption Point Code}\Longtrue
+\Bullet {\it Subscripting\/} a procedure:
+		yields resumption point code
+\medskip
+		{\pt decode[6]} yields {\pt "s = s || c"}
+
+\Bullet {\it Substringing\/} a procedure:
+		yields ``closest'' resumption point code
+\program
+		decode[find("type", decode)!1]
+		decode[135!1]
+\endprogram
+\medskip
+		yields {\pt 'type(t[c]) == "procedure"'}
+		substrings are ``widened''
+
+\Bullet Source code can be modified
+\program
+		decode[10] = "if (~t[c](s)) return"
+\endprogram
+\medskip
+		changes {\pt decode} to
+\program
+		procedure decode (cmd, keymap)
+			...
+			if (type(t[c]) == "procedure") {
+				\begingroup\sl if (~t[c](s)) return\endgroup
+				return (1)
+			...
+\endprogram
+\medskip
+		re-compilation is automatic
+\Longtrue
+\NewPage
+\centerline{\bigrm Procedure Activations}
+\Bullet Procedure {\it activations\/} are \EZ\ {\it tables}
+
+\Bullet Table indices of activations:
+		formal parameters
+		local variables
+		state information
+
+\Bullet Explicit activation creation:
+		conversion from procedure to table
+		explicit table construction
+\program
+		procedure decode(cmd, keymap)
+			local c, s, t
+			...
+		end
+\medskip
+		d = table(decode)
+\endprogram
+\medskip
+		{\pt for (i in d) s = s || " " || i}
+		returns {\pt " cmd keymap c s t ..."}
+
+\Bullet Activations may be ``invoked'' like procedures
+\program
+		d("abcd", z19map)
+		d.cmd = "abcd"
+		d.keymap = z19map
+		d()
+\endprogram
+\NewPage
+\centerline{\bigrm State Information}
+\Bullet Activations contain ``state'' information
+
+\Bullet Index {\pt "Procedure"} contains the procedure
+\program
+		d["Procedure"] \rm is \pt decode
+\endprogram
+
+\Bullet Index {\pt "Resumption"} contains ``location counter''
+
+\Bullet State entries can be changed arbitrarily
+
+\Bullet Change {\pt Resumption} to change location counter
+\program
+		d.Resumption = 1
+		d("abcd")
+\endprogram
+\medskip
+		restarts {\pt decode} with a new first argument
+
+\Bullet Change {\pt Procedure} to edit/debug the code
+\NewPage
+\centerline{\bigrm Editing \EZ\ Values}
+\Bullet Conventional display editor, written in \EZ
+
+\Bullet Implementation similar to EMACS:
+		keystrokes interpreted by decoding tree
+		leaves are editing functions
+		\EZ\ tables form decoding tree
+		\EZ\ procedures implement editing functions
+
+\Bullet Editor edits {\it all\/} \EZ\ types
+		common user interface
+		editing primitives for each type
+
+\Bullet Editing arbitrary structures
+		recursively call the editor
+		editor is an editing function 
+
+\Bullet Editing the editor
+		edit the decoding tree 
+		edit the editing functions
+\NewPage
+\centerline{\bigrm Debugging}
+\Bullet Debugging is editing activations
+
+\Bullet Examining/setting values
+		editing table indices and values
+
+\Bullet ``Walking the stack''
+		editing activations
+
+\Bullet Breakpoints
+		edit procedure to include a call to editor
+\program
+		edit(d)
+\endprogram
+\medskip
+		i.e. edit the activation
+
+\Bullet Keystrokes abbreviate debugging commands
+\NewPage
+\centerline{\bigrm Incremental Execution}
+
+\Bullet Incremental execution:
+		execute code for a resumption point
+		similar to ``single-stepping''
+
+\Bullet Implementation in \EZ:
+		select fragment to be executed:
+\program
+			x.Procedure[i:j]
+\endprogram\medskip
+		save current procedure and resumption point:
+\program
+			savP = x.Procedure
+			savR = x.Resumption
+\endprogram\medskip
+		reset procedure and resumption point:
+\program
+			x.Procedure = x.Procedure[i:j]
+			x.Resumption = 1
+\endprogram\medskip
+		execute the code for the resumption point
+\program
+			x()
+\endprogram\medskip
+		restore original procedure, resumption point:
+\program
+			x.Procedure = savP
+			x.Resumption = savR
+\endprogram
+
+\Bullet Editing is a natural part of execution
+\NewPage
+\centerline{\bigrm Future Work}\Longtrue
+\Bullet Linguistic encapsulation of system services
+		asynchronous processes
+		interrupts and signals
+		interactive devices
+		graphics devices
+		networks
+
+\Bullet High-level programming language facilities
+		resumption points
+		alternative representations for activations
+		operations on procedures and activations
+
+\Bullet Implementation
+		multiple representations, e.g. Smalltalk-80
+		string representations
+			lazy evaluation
+		storage management
+			reduce permanent memory consumption
+			concurrent reclamation
+
+\Bullet Development on personal systems
+		\EZ\ workstation
+\bye

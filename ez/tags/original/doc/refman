@@ -1,0 +1,58 @@
+.ds V# 3.0
+.de M
+.nr PQ \\n(.f
+.if !"\\$1"" \\$3\\fM\\$1\\f\\n(PQ\\$2
+.if "\\$1"" .ft M
+..
+.de PS
+.DS I 3n
+.M
+.if !'\\$1'' .ta \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+.if '\\$1'' .ta 3n +3n +3n +3n +3n +3n +3n +3n
+..
+.de PE
+.R
+.DE
+..
+.ds Y \s-2Y\s0
+.ds EZ \fI\s-2EZ\s0\fP
+.ds Un \s-2UNIX\s0
+.ds UN \s-2UNIX\s0
+.ds t 	
+.ds || \(br\(br
+.if \nd=2 .ds || \(br\|\|\(br
+.de SS
+.ps \\$1
+.nr PS \\$1
+.vs \\$2p
+.nr VS \\$2
+..
+.de DL
+.DS \\$1 3n
+.ft I
+.ta 3n 6n 9n 12n 15n
+..
+.TR 84-1
+.GP MCS-8102298 MCS-8302398
+.DA "January 1984"
+.TL
+The \*(EZ Reference Manual
+.AU
+Christopher W. Fraser
+David R. Hanson
+.AB
+\*(EZ is an interactive programming and command language
+that is semantically between
+high-level string processing languages like SNOBOL4
+and low-level Algol-like languages like Pascal.
+It is similar in spirit to SNOBOL4 and Icon
+and has many of their attributes, such as
+run-time flexibility,
+untyped variables, and heterogeneous structures.
+\*(EZ operates in a `persistent' environment in which
+variables retain their values until changed.
+As such, many of the services provided by traditional
+operating systems, such as a file system,
+are provided by \*(EZ language features.
+This report is a reference manual for Version \*(V# of \*(EZ.
+.AE

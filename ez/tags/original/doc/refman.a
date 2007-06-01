@@ -1,0 +1,27 @@
+.[]
+.bp
+.SH
+Appendix A.  Run-Time Error Messages
+.PP
+Execution errors result in an error message
+being printed on the standard error output.
+If a type error occurs, the offending value is also printed.
+Error messages that may occur during program execution are listed below.
+.DS
+.ft R
+stack overflow
+division by zero
+residue by zero
+second and third arguments to map of unequal length
+numeric expected
+real expected
+string expected
+integer expected
+procedure expected
+variable expected
+.DE
+A trace of the call stack at the time of the error is also printed.
+.PP
+System errors result in a message describing the location of the error.
+These errors, which should be reported to the authors,
+cause immediate termination of \*(EZ.

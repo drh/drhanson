@@ -1,0 +1,5 @@
+procedure acker(a,b)
+   if (a == 0) return (b+1)
+   if (b == 0) return (acker(a-1, 1))
+   return (acker(a-1, acker(a, b-1)))
+end

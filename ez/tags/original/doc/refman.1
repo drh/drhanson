@@ -1,0 +1,57 @@
+.NH
+Introduction
+.PP
+\*(EZ is designed to provide high-level language features
+that subsume facilities traditionally
+provided by operating systems.
+This goal is accomplished by using late binding times,
+execution-time scope rules,
+and a type system in which conventionally distinct types are
+treated as single types.
+The result is a system in which objects 
+that are manipulated by utilities in traditional operating systems
+are manipulated by operators and control structures in \*(EZ.
+.PP
+As a programming language,
+\*(EZ is a high-level string-processing language
+derived from SNOBOL4, SL5,[.sl5 procedure mechanism.] and Icon .[.iconref.]
+It has most of the basic attributes of those languages,
+such as concise, expressive constructs, run-time flexibility,
+untyped variables, heterogeneous structures, and automatic type conversion.
+Strings are treated as scalars, and there are
+numerous `mid-level' string operations similar to those in Icon,
+but pattern-matching operations are not provided.
+With a few exceptions,
+\*(EZ's control structures are identical to those
+found in traditional languages.
+.PP
+The \*(EZ language resides in a `persistent' environment
+much like an APL workspace in which
+values exist until changed.
+Unlike systems that access workspaces explicitly,[.persistent heap.]
+the persistence in \*(EZ is implicit and a part of the language,
+much as in the Gem system.[.irons graphics software 1976.]
+This is one characteristic that distinguishes \*(EZ from
+various LISP environments, which access traditional operating system
+services through functions or other explicit mechanisms.[.sandewall lisp.]
+.PP
+The remainder of this report describes the syntax and semantics
+of Version \*(V# of \*(EZ.
+.NH 2
+Syntax Notation
+.PP
+The syntax of \*(EZ is described informally
+using English prose and formally using a metalanguage in which
+syntactic classes are denoted by
+.I italic
+type and literal characters and symbols are denoted by
+.B bold
+type.
+Alternatives are separated by vertical bars ( \(br ) or are
+listed on separate lines.
+Brackets ( [ ] ) enclose optional items,
+and ellipses (...) indicate indefinite
+repetition of the item they immediately follow.
+In cases where the literal use of the metasymbols
+is unclear in context or conflicts with their
+metalinguistic use, they are enclosed in quotes.

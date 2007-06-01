@@ -1,0 +1,1088 @@
+.ie \nv \{\
+.de M
+.nr PQ \\n(.f
+.if !"\\$1"" \\$3\\fB\\$1\\f\\n(PQ\\$2
+.if "\\$1"" .ft B
+.. \}
+.el \{\
+.if t .fz M -1
+.de M
+.nr PQ \\n(.f
+.if !"\\$1"" \\$3\\fM\\$1\\f\\n(PQ\\$2
+.if "\\$1"" .ft M
+.. \}
+.de PS
+.DS I 3n
+.ie \nv .ss 14
+.el .ss 9
+.M
+.if !'\\$1'' .ta \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8
+.if '\\$1'' .ta 3n +3n +3n +3n +3n +3n +3n +3n
+..
+.de PE
+.ie \nv .ss 10
+.el .ss 4
+.R
+.DE
+..
+.nr LL 6.75i
+.nr HM .7i
+.nr FM 1.15i
+.ds S \fI\s-2EZ\s0\fP
+.de SS
+.br
+.ps \\$1
+.nr PS \\$1
+.vs \\$2p
+.nr VS \\$2
+..
+.ds Y \s-2Y\s0
+.ds Un U\s-2NIX\s0
+.ds t 	
+.LP
+.rs
+.sp .4i
+.ce 100
+\fB\s+1A High-Level Programming and Command Language\s0\fP\(dg
+.sp
+Christopher W. Fraser
+David R. Hanson
+.sp
+\fIDepartment of Computer Science
+The University of Arizona
+Tucson, Arizona 85721\fP
+.ce
+.sp .6i
+.2C
+.SH
+Abstract
+.PP
+Unifying programming and command languages is a promising idea
+that has yet to be thoroughly exploited.
+Most attempts at such unification have used Lisp or
+traditional languages, such as Pascal.
+This paper describes the command and programming language \*S,
+which attempts to unify command and programming
+languages by using high-level string-processing concepts,
+such as those in SNOBOL4 and Icon.
+\*S has particularly simple data abstractions that
+attempt to bridge the gap between
+the data abstractions of command languages and those
+of programming languages.
+This is accomplished by \fItype fusion\fP,
+which pushes the differences between some classes of types,
+such as strings and text files,
+out of the language and into the implementation.
+The language, its use, and its implementation are described.
+.FN
+.ps -1
+.vs -1
+\(dgThis work was supported by the National Science Foundation
+under Grants MCS-7802545 and MCS-8102298.
+.sp .2v
+Permission to copy without fee all or part of this material
+is granted provided that the copies are not made or distributed
+for direct commercial advantage,
+the ACM copyright notice and title of the publication and
+its date appear,
+and notice is given that copying is by permission of the
+Association for Computing Machinery.
+To copy otherwise,
+or to republish,
+requires a fee and/or specific permission.
+.sp .125i
+.vs
+.ps
+.FE
+.NH
+Introduction
+.PP
+Traditional programming languages and command languages
+are fundamentally different.
+Their differences are induced
+by the differences in their intended application areas.
+.PP
+At a more fundamental level,
+programming and command languages
+differ most radically in the data abstractions they must support
+and in their principal binding times.
+Typical Pascal-like programming languages support
+data types that are close to those provided by
+most computers, such as integers, reals, characters,
+and arrays.
+Command languages, on the other hand, tend to support
+`high-level' data types that bear little resemblance
+to the data types provided by most architectures.
+Examples are strings, files, directories, and programs.
+.PP
+Conventional programming languages tend toward early binding times.
+They insist on compile-time definition of
+many aspects of programs, such as the size and type of variables,
+primarily for efficiency reasons.
+Command languages tend toward late binding times, not only
+because efficiency is less important, but because
+the kinds of operations performed demand more flexibility.
+Indeed, compilation is delayed until execution in most
+command languages.
+Varying-length strings and lists,
+automatic type conversion,
+procedures with a variable number of arguments, and
+dynamic procedure definition are examples of command
+language features that require late binding times.
+.PP
+The control abstractions of
+programming and command languages do have many superficial
+similarities, and
+the structured control constructs of programming languages
+appear in some command languages,
+such as the \*(Un shell [.bourne shell, joy shell.]
+and the CMS EXEC.[.ibm exec.]
+Since control abstractions and data abstractions
+interact closely, command languages tend to offer
+more flexible control structures.
+Examples are loops that iterate over lists of items
+and `generative' or pattern-matching
+constructs, such as file name expansion.
+.PP
+Unifying programming and command languages is a promising idea
+that has been examined from a number of
+viewpoints.[.jones ifips, morris popl7,
+sandewall lisp experience, levine command language.]
+Unifying programming and command languages would
+make learning multiple languages unnecessary for some users,
+remove the distinction between `real programs' and `command programs',
+and simplify the use and implementation of programming environments.
+.PP
+When traditional languages, such as Pascal,
+have been used as command languages,[.solo job interface, beech ifip.]
+they have seldom offered more than procedure calls
+in the traditional languages.
+Other aspects of the programming language,
+such as data types, appear in restricted forms
+or are omitted.
+This shortcoming can be attributed to
+the differences mentioned above;
+traditional languages lack the flexibility and data abstractions
+necessary for command languages.
+.PP
+Attempts at using high-level languages as command languages
+have been more encouraging.
+Lisp and programming environments built around Lisp
+are the prime examples.[.ellis lisp shell, sandewall, interlisp.]
+Much of this success is because Lisp is flexible
+and has many of the concepts and facilities needed
+in a command language.[.levine command.]
+.PP
+This paper describes the command and programming language \*S,
+which attempts to unify command and programming
+languages by using the concepts
+of high-level string-processing languages,
+such as SNOBOL4 and Icon.[.iconref.]
+Instead of embedding a command language in a programming
+language, or vice versa, however,
+\*S was designed as a unified language \fIfrom the onset\fP.
+For the most part,
+the control abstractions in \*S are traditional;
+some aspects of Icon's goal-directed expression
+evaluation [.griswold icon generators.]
+and coroutines [.sl5 procedure cacm.] will be included in future versions.
+The data abstractions in \*S are particularly simple and
+are an attempt to bridge the gap between
+the data abstractions of command languages and those
+of programming languages.
+This is accomplished by
+\fItype fusion\fP, which moves
+the differences between some classes of types
+out of the language and into the implementation.
+For example,
+strings and text files are identical at the source-language level;
+the use of secondary storage is hidden within the implementation.
+The remainder of this paper gives
+an overview of \*S and its use,
+a description of its implementation,
+and a glimpse of its future development.
+.NH
+Language Overview
+.PP
+As a programming language,
+\*S fits somewhere between high-level string processing languages
+like SNOBOL4 and low-level Algol-like languages like C.[.Clanguage.]
+It shares many of the basic attributes of languages like SNOBOL4 and Icon,
+such as concise, expressive constructs, run-time flexibility,
+untyped variables, heterogeneous structures, and automatic type conversion.
+It also treats strings as scalar types and has
+numerous `mid-level' string operations similar to those in Icon.
+It does not, however, have pattern matching or any form of backtracking.
+.PP
+Syntactically, \*S is similar to C with a few additional control constructs.
+\*S programs are sequences of statements and procedure declarations.
+Statements outside procedures are executed immediately, and
+procedure declarations assign procedures to identifiers.
+Identifiers are either global or local.
+Statements include the
+usual structured control flow constructs and expressions.
+\*S programs exist in a `workspace' environment much like APL.
+Values, global variables, and procedures exist until changed.
+.PP
+\*S supports fewer data types than SNOBOL4 and Icon
+because it treats several classes of types as a single type.
+Types of variables vary during execution and are
+the types of the values assigned to them.
+Values are converted to the appropriate types automatically
+as necessary for most operations,
+e.g. operands of arithmetic operations are
+converted to numeric types if possible.
+The following table lists the \*S types
+and their traditional counterparts.
+.PS
+.R
+.ta \w'procedure\ \ 'u
+\*S \fItype	traditional types\fP
+numeric	integer, real
+string	string, text file
+procedure	procedure, program
+table	array, record,
+	associative table, directory
+.PE
+.PP
+Integers and real numbers serve their conventional purposes.
+In arithmetic operations,
+integer arithmetic is performed if both operands are integers,
+otherwise, the operands are
+converted to reals and real arithmetic is performed.
+.PP
+Strings are sequences of characters.
+In string operations,
+operands are converted to strings, if possible.
+Text files and strings are linguistically equivalent.
+Files are manipulated as strings and
+may be as large as desired.
+The implementation handles the allocation and use of secondary storage,
+as in Poplar.[.morris popl7.]
+Substrings, and hence subfiles,
+can be manipulated and arbitrarily changed.
+.PP
+Tables are heterogeneous one-dimensional
+arrays that can be indexed by, and can reference,
+arbitrary values much like SNOBOL4 tables and
+.B awk
+arrays.[.awk.]
+Tables are as large is necessary to accommodate their contents.
+Since tables can contain arbitrary types, such as files,
+they are a generalization of directories in traditional systems.
+.PP
+\*S procedures serve their conventional purpose and
+are declared as follows.
+.PS
+procedure \fIname\fP ( ... )
+	local \fIidentifiers\fP
+	\fIstatement\fP...
+end
+.PE
+.M local
+identifiers are known only within
+the procedure in which they are declared.
+Undeclared identifiers are global.
+Procedures are also data values;
+`executing' a procedure declaration assigns the procedure to
+.I name ,
+as if the assignment
+.PS
+\fIname\fP = procedure ( ... )
+	local \fIidentifiers\fP
+	\fIstatement\fP...
+end
+.PE
+were made.
+Programs are also treated as procedures;
+invoking a program is linguistically equivalent to calling a procedure.
+.PP
+Most expressions compute values as usual, but some do not yield a value.
+The relational operators, for example,
+return their right operand if the relation is true,
+and do not return a value if their relation is false.
+Other operators, such as assignment,
+ignore the absence of values.
+For example,
+.PS
+max = max < a
+.PE
+changes
+.M max
+only if
+.M a
+is greater than
+.M max .
+Likewise,
+variables do not have a value initially,
+and the lack of a value in a context that requires one,
+such as for addition, yields a run-time error.
+This facility is a simplification of the
+sequence of values returned by generators in Icon.[.icon generators toplas.]
+.PP
+Control structures are driven by the presence or absence of values.
+For example, in
+.PS
+if (a > max) max = a
+.PE
+.M max
+is changed only if the comparison yields a value.
+\*S
+includes the conventional
+.M while
+and
+.M repeat
+loops and the C
+.M for
+loop.
+.NH 2
+Primitive Operations
+.PP
+\*S includes the conventional arithmetic, comparison, and logical operations,
+although some have unconventional semantics.
+For example,
+the type of a comparison operation depends on the types of the operands.
+If both operands are strings,
+lexical comparison is performed;
+if either operand is numeric, arithmetic comparison
+is performed, automatically converting the other
+operand as necessary.
+This strategy permits strings to be compared with numerics without
+requiring explicit conversions.
+Explicit conversions can be used to force
+numeric comparison between strings.
+.PP
+String concatenation and substring selection are
+included in addition to the string comparison operations.
+Concatenation, denoted by the binary operator
+.M "||" ,
+creates a new string by appending the second operand
+to a copy of the first operand.
+The operands are automatically converted to strings as necessary.
+Substrings, and hence subfiles,
+can be manipulated and arbitrarily changed.
+Substrings are specified by \fIs[i:j]\fP,
+where
+.I i
+and
+.I j
+are character positions in
+.I s
+starting at 1 from the left.
+.I s
+is automatically converted to a string, if necessary.
+This facility subsumes random access mechanisms in traditional systems.
+This results from the fusion of strings and text files into a single type.
+.PP
+As in Icon, substring numbering refers to positions between characters,
+so that, for example, the positions in the string
+.M
+"HAT"
+.R
+are
+.PS
+.ta 0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC
+\*t\*tH\*t\*tA\*t\*tT
+\*t\(ua\*t\*t\(ua\*t\*t\(ua\*t\*t\(ua
+.ps 6
+.ft R
+\*t1\*t\*t2\*t\*t3\*t\*t4
+.ps
+.PE
+Note that the position after the last character may be specified.
+Positions may also be specified relative to the right end of
+a string starting at 0 and continuing
+with negative values toward the left:
+.PS
+.ta 0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC +0.1iC
+\*t\*tH\*t\*tA\*t\*tT
+\*t\(ua\*t\*t\(ua\*t\*t\(ua\*t\*t\(ua
+.ps 6
+.ft R
+\*t-3\*t\*t-2\*t\*t-1\*t\*t0
+.ps
+.PE
+For this string, the positions 4 and 0 are equivalent, positions
+3 and \(mi1 are equivalent, etc.
+The substring operation does not return a value if
+the substring specification refers to a non-existent portion of
+the string.
+Assignment to a substring
+changes the substring to the new value
+and assigns the new string to the subscripted variable.
+The value assigned to the substring is
+automatically converted to a string as necessary.
+For example,
+.PS
+s = "The file contains 72 characters"
+s[19:21] = 64*64
+.PE
+assigns
+.PS
+"The file contains 4096 characters"
+.PE
+to
+.M s ,
+and is equivalent to
+.PS
+s = s[1:19] || 64*64 || s[21:0]
+.PE
+The positions in a substring specification can be
+given in either order;
+.M s[21:19]
+specifies the same substring as
+.M s[19:21].
+In addition,
+substrings can be specified by starting position and length;
+for example,
+.M s[19!2]
+and
+.M s[21!-2]
+are equivalent to the specification above.
+.PP
+Tables are created automatically when a variable
+is subscripted, e.g.
+.PS
+count["procedure"] = 1
+.PE
+assigns
+.M 1
+to the table element at index
+.M
+"procedure".
+.R
+If the value of
+.M count
+is not a table,
+one is created and assigned to
+.M count .
+Tables and table entries are created only on assignment;
+referencing a non-existent entry does not create the entry.
+.PP
+The control structure
+.PS
+for (\fIid\fP in \fIexpr\fP) \fIstatement\fP
+.PE
+sequences through the table returned by
+.I expr .
+It repeatedly assigns the index value of a table element to
+.I id
+and executes
+.I statement
+until all of the elements have been processed.
+For example,
+.PS
+sum = 0
+for (i in t)
+	sum = sum + t[i]
+.PE
+sums the elements of table
+.M t .
+.NH 2
+Built-in Values
+.PP
+Numerous built-in procedures and values are provided
+as the initial values of global variables.
+The built-in procedures include string analysis functions
+similar to those in Icon,
+type conversion and interrogation functions,
+and debugging functions.
+Examples include
+.M upto ,
+.M many ,
+and
+.M size .
+.M "upto(s1, s2, i, j)"
+returns the leftmost position in
+.M s2[i:j]
+where a character in
+.M s1
+occurs.
+If none of the characters in
+.M s1
+occur, no value is returned.
+.M i
+and
+.M j
+are optional and, if omitted, default to 1 and 0, respectively.
+.M "many(s1, s2, i, j)"
+operates similarly, but
+returns the position of the first character in
+.M s2[i:j]
+that does not appear in
+.M s1 .
+.M size(x)
+returns the number of elements in
+a table or the number of characters in a string.
+For other types,
+.M x
+is converted to a string, and
+if the conversion fails, no value is returned.
+.PP
+Although explicit type conversion is rarely needed,
+built-in functions are provided so that run-time errors
+that occur when implicit conversions fail can be avoided.
+For example,
+.M numeric(x)
+returns the result of
+converting
+.M x
+to a real or an integer.
+If the conversion is not possible,
+no value is returned.
+The functions
+.M string ,
+.M integer ,
+and
+.M real
+are similar,
+and
+.M type(x)
+returns the type of
+.M x
+as a string (e.g.
+.M
+"string"\c
+.R
+), or
+.M
+"void"
+.R
+if
+.M x
+has no value.
+.PP
+External input and output are performed by the built-in procedures
+.M read
+and
+.M write .
+.M read(f)
+reads the next line from the external file
+.M f
+or from the standard input if
+.M f
+is omitted.
+.M "write(f, ...)"
+writes its arguments to the external file
+.M f
+or to the standard output if
+.M f
+is omitted.
+.PP
+The initial values of global variables
+.M ascii ,
+.M lcase ,
+and
+.M ucase
+are the \s-2ASCII\s0 character set, lower-case letters, and upper-case
+letters, respectively.
+The initial values of
+.M input ,
+.M output ,
+and
+.M errout
+are the standard input, the standard output, and the error output,
+respectively.
+.PP
+The value of the built-in variable
+.M root
+is an \*S table that
+.I is
+the global symbol table,
+which contains the built-in procedures and values described above.
+The compiler determines the meaning of free identifiers
+by searching this table,
+making insertions as necessary.
+For example, the assignment
+.PS
+section = "Introduction"
+.PE
+is equivalent to
+.PS
+root["section"] = "Introduction"
+.PE
+Changing
+.M root
+changes meanings of identifiers for subsequent compilation.
+Assuming
+.M t
+is a table containing a restricted set of built-in values,
+.PS
+root = t
+.PE
+would restrict subsequent programs to those values.
+Actually,
+the compiler searches a chain of tables beginning with
+.M root
+and continuing with
+.M
+root[".."]
+.R
+and so on until the identifier is found or a table with no
+.M
+".."
+.R
+entry or whose
+.M
+".."
+.R
+entry is not a table is encountered.
+If the identifier is not found by this search,
+it is inserted in
+.M root .
+As illustrated below,
+the user
+.I and
+applications programs may construct and modify these chains as desired.
+
+.NH
+Applications
+.PP
+Many operations performed in traditional systems
+by command interpreters and utility programs are trivial in \*S.
+For example,
+.PS
+size(old)
+.PE
+prints the length of a file, and
+.PS
+if (new ~\|= old)
+	write("files are different\en")
+.PE
+determines if two files hold the same text.
+Traditional string-processing utilities are easily written in \*S.
+For example,
+.PS
+procedure wc(s)
+	local nl, nw, i, wchrs
+
+	wchrs = ascii[upto(" ", ascii)+1:-1]
+	nl = nw = 0
+	while (i = upto(wchrs || "\en", s))
+		if (s[i!1] == "\en") {
+			nl = nl + 1
+			s = s[i+1:0]
+			}
+		else {
+			nw = nw + 1
+			s = s[many(wchrs, s, i):0]
+			}
+	return (nl || " " || nw)
+end
+.PE
+counts the number of words and lines in a string (or file).
+For example,
+.PS
+write(size(old), " ", wc(old), "\en")
+.PE
+prints the number of characters, words, and lines in
+.M old .
+.M wchrs
+is a string containing the printable characters.
+.PP
+Tables provide a general directory structure.
+The indices are the `names' and the values are the `files',
+but both indices and values may be of arbitrary types.
+So, for example, `help' documents for a set of procedures
+might be organized as a table indexed by the
+procedures themselves instead of their names,
+which might be ambiguous.
+Thus
+.PS
+procedure mail(...)
+	...
+end
+doc[mail] = "mail \*(em receive mail"
+.PE
+defines and documents
+.M mail .
+.PP
+Many operations on directories that require utility
+programs in other environments are simple in \*S.
+For example,
+.PS
+size(paper)
+.PE
+prints the number of entries in the directory
+.M paper ,
+and
+.PS
+for (i in paper)
+	write(i, "\en")
+.PE
+lists the `names' of the `files' in it.
+Deleting a file is accomplished by the built-in function
+.M remove ,
+which removes an element and its index from a table:
+.PS
+remove(paper, "oldabstract")
+.PE
+.PP
+Since table entries can refer to values of arbitrary types,
+entries referring to other tables permit the construction of
+hierarchical directory structures.
+Actually, arbitrary graphs are permitted.
+Maintaining a focus of attention or `current directory' amounts
+to maintaining a global variable whose value \fIis\fP the focus.
+For example,
+.PS
+cd = paper
+.PE
+moves the focus to `directory'
+.M paper ,
+and
+.PS
+cd["title"] = "EZ Programming"
+.PE
+creates a
+.M title
+`file' in it.
+Additional entries can be made to facilitate
+moving about a directory structure much as in \*(Un.
+For example,
+.PS
+cd["sections"][".."] = cd
+.PE
+causes
+.M
+".."
+.R
+in directory
+.M sections
+to refer to its ancestor
+.M paper ,
+and \fIcreates\fP
+.M sections
+if necessary.
+Henceforth,
+.PS
+cd = cd[".."]
+.PE
+moves the focus up one level.
+.PP
+The generality of \*S types permits
+flexibility in directory manipulation.
+Consider the procedure
+.M chdir ,
+which changes
+.M root
+to a different directory after establishing a path back to
+.M root .
+.PS
+procedure chdir(dir)
+	root[dir]["last"] = root
+	root = root[dir]
+end
+.PE
+.M chdir
+maintains a graph of tables whose interconnections
+through the
+.M
+"last"
+.R
+entries represent
+the recent history of the focus.
+This mechanism represents dynamic relationships where
+the \*(Un directory mechanism represents static ones.
+The latter relationships, other relationships, or combinations thereof
+could be represented using similar conventions and procedures.
+For example, if the table structure is a tree and if
+.M
+".."
+.R
+is used in place of
+.M
+"last",
+.R
+the compiler resolves free identifiers by searching
+the `path' from
+.M root
+to the root of the tree.
+This usage offers a facility similar to
+Smalltalk's nested classes .[.smalltalk.]
+Completely different schemes,
+such as maintaining the static structure, dynamic history, and
+contents in separate tables, are also possible.
+.PP
+Type fusion allows procedures to apply in multiple contexts.
+Consider the emerging \*S line editor.
+It initially scans a string (text file)
+and converts it to a table (directory)
+with one entry per `line' of the file
+because it is cheaper to insert and delete entries in a table
+than it is to insert and delete characters in a string.
+Immediately, all procedures and utilities written to operate on files
+are available to edit individual lines in a file.
+For example, a character transliteration procedure
+can be applied selectively to specified lines of a file
+instead of to all lines indiscriminately.
+.PP
+Conversely,
+line editor procedures are available to edit structures other
+than text files .[.fraser generalized text editor.]
+Consider the editor's procedure to delete line
+.M n
+from a global table
+.M tbl ,
+which slides up the remaining lines to fill the gap:
+.PS
+procedure Delete(n)
+	if (integer(n))
+		for (; n < size(tbl); n = n + 1)
+			tbl[n] = tbl[n+1]
+	remove(tbl, n)
+end
+.PE
+.M Delete
+was written to remove a line from a file,
+but it can also be used remove a subdirectory from a directory.
+For example, as suggested above,
+a document might be structured as a tree,
+with the root containing a directory of several sections,
+with each section containing several paragraphs and figures, etc.
+The editor's procedure to delete lines of text from a file
+can also delete sections from a paper, paragraphs from a section, etc.
+If they were numbered, it also slides up their successors,
+which is as useful when deleting sections or paragraphs
+as when deleting lines.\(dg
+.FN
+\(dgBesides allowing structured documents,
+this representation also allows a clean separation
+of text from formatter parameters.
+For example, the text could be represented
+as a numbered table of strings with
+unnumbered table entries
+recording the number of lines of text, the indentation, etc.
+.FE
+.M Delete
+subsumes a text editor's line deletion command
+and a directory system's file deletion command.
+.PP
+The editor's insertion procedure is also useful in multiple contexts.
+It inserts a value
+.M v
+just before position
+.M n ,
+sliding down the remaining entries if
+.M n
+specifies a spot in a numbered sequence:
+.PS
+procedure Insert(n, v)
+	if (integer(n))
+		for (i = size(tbl); i >= n; i = i - 1)
+			tbl[i+1] = tbl[i]
+	tbl[n] = v
+end
+.PE
+.M Insert
+and
+.M Delete
+combine to offer many common text- and directory-editing functions.
+.PS
+Insert(3, read())
+.PE
+inserts new text, and
+.PS
+Insert(3, tbl[1])
+.PE
+makes a copy of line 1 before line 3.
+The sequence
+.PS
+Insert("new", tbl["old"])
+Delete("old")
+.PE
+renames a file in a directory, and
+the analogous operation on lines in a file
+.PS
+Insert(3, tbl[1])
+Delete(1)
+.PE
+`renames' line 1 to line 2, that is,
+moves line 1 to line 2.
+.PP
+These procedures implement the editor
+and are called by a general command interpreter.
+Different structures can be edited by binding
+different editing procedures to the same command interpreter.
+This is accomplished by
+compiling the command interpreter with different symbol tables.
+This generality and type fusion combine to
+allow otherwise separate functions
+to share a common implementation.
+Text editors have been extended to offer directory editing
+before,[.fraser generalized editor, stallman EMACS.]
+but the new functions require new code.
+\*S represents both files and directories as tables
+and thus subsumes both editors with a single table editor.
+With fewer types, commands have wider applicability.
+.NH
+Implementation
+.PP
+The current implementation of \*S is written in C and runs under \*(Un.
+Many of the implementation techniques used are similar
+to those used in SNOBOL4 and Icon.
+The `compilation' part of \*S is implemented using
+YACC [.yacc.] and associated traditional techniques.
+\*S programs are compiled into
+an interpretive code and executed accordingly.
+.PP
+Type fusion, the longevity of values,
+the applicative nature of strings (and files),
+and the potential for large values (e.g. tables and files),
+complicate the implementation of the execution-time environment.
+At the lowest level,
+storage is divided into fixed-size pages that reside
+on secondary storage.
+All values are represented by small, fixed-size \fIdescriptors\fP that
+include the necessary data or
+point to pages organized according to type.
+All types of data can be paged to secondary storage.
+A large software cache is used to reduce paging activity.
+Non-resident strings, tables, and procedures
+correspond to the traditional concepts of text files, directories,
+and object or executable files.
+.PP
+Strings and text files are implemented as linked
+lists of substrings bounded by the page size.
+The distribution of strings is used to determine the page size;
+the intent is for most strings to fit on one page.
+In the current implementation, the page size is 128 bytes.
+.PP
+The exact representation of tables is adapted to
+their contents during execution.[.sl5 data structures.]
+Tables with small integer indices are
+organized much like \*(Un files:
+the descriptor points to a page that points to other pages
+containing table elements or further pointers.[.ken unix implementation.]
+When a table with small integer indices is assigned an non-integer
+index or a large integer index,
+it is reorganized as a hash table.
+Both of these organizations efficiently accommodate
+tables with non-contiguous indices.
+.PP
+Other values are implemented in similar fashion.
+For example,
+compiled code is stored in linked lists of pages,
+and, like all other values,
+is paged in on demand during execution.
+Since all pages, including those containing
+.M root ,
+ultimately reside on secondary storage,
+this approach facilitates saving the state of the system.
+.PP
+Secondary storage is allocated in units of pages
+and is accomplished by simply
+extending the external file by the requested amount.
+Secondary storage is reclaimed by an off-line process
+using a traditional garbage collection algorithm.
+.PP
+The straightforward implementation used in the initial
+version of \*S suffers from a few efficiency problems.
+The applicative nature of strings (and hence files),
+which has well established benefits,
+causes the worst of these problems.
+In the current implementation, after executing
+.PS
+a = "... a long string ..."
+b = a
+.PE
+.M a
+and
+.M b
+logically refer to two different strings.
+Internally, however, they refer to the same string.
+Thus, executing
+.PS
+b[i:j] = "... another string ..."
+.PE
+which refers to the substring between positions
+.M i
+and
+.M j ,
+causes a copy of the original string
+to be made in order to preserve the value of
+.M a .
+An alternative strategy, currently under investigation,
+is to use lazy evaluation to reduce the amount of copying necessary.
+.NH
+Conclusion
+.PP
+The unification of a high-level
+programming language and a command language is accomplished in \*S
+by fusing normally distinct linguistic mechanisms.
+Type fusion and the implementation of
+.M root
+as an \*S table
+exemplify this general principle.
+It is difficult to place examples of use
+into either the programming or command language category.
+Typical use, in which users maintain tables of procedures,
+blurs the distinction beyond the point of recognition.
+Such usage appears particularly promising for stand-alone
+systems on small computers.
+The current version of \*S has been implemented with
+this application in mind.
+.PP
+Initial experience with \*S has suggested additional fusion.
+Treating strings and files as a single type
+has proven very convenient.
+It is useful, in some circumstances, to include tables in this fusion.
+For example, the editor described above converts a file to a table.
+When editing is finished, the editor converts the table back to a file.
+In the \*S environment, these conversions appear artificial.
+Fusing tables with strings and files would simplify this kind
+of processing as well as directory processing.
+For example, scanning a directory could be accomplished by scanning
+all of the files in the directory,
+and many operations defined on files would generalize to tables.
+Similarly,
+automatic conversion from strings to procedures via compilation
+would blur the somewhat artificial distinction between
+source and object code.
+This facility would permit
+.PS
+while (read()())
+	;
+.PE
+to serve as a simple command interpreter much as in Lisp.
+Current research is focused on these kinds of fusion.
+.PP
+There are other control abstractions that might be useful in \*S.
+Three under active consideration are coroutines,
+history mechanisms, and goal-directed evaluation.
+Coroutines are the main control abstraction
+in a companion research effort in
+command languages,[.fraser coroutines.] which seeks to
+decompose system utilities into their fundamental components,
+and have proven useful
+in other programming languages.[.hanson cacm sl5, modulabook 1981.]
+Adding coroutines to \*S would make it an ideal language in
+which to write command language interpreters.
+History mechanisms and Icon's goal-directed expression evaluation offer
+retentive control facilities that add another dimension
+of programmability to \*S,
+especially in program development and maintenance applications.
+.PP
+The generality of \*S complicates its evaluation.
+For example, the use of
+.M root
+and its associated search strategy yield unusual `scope rules'
+whose benefits and implications are yet to be completely understood.
+More use and experimentation with \*S
+is needed to determine its range of applications and future development.
+.PP
+Despite the embryonic state of the \*S environment,
+it is clear that using a high-level language as both
+a programming and command
+language shows great potential.[.mashey command language.]
+\*S also represents an approach to providing
+the flexibility and dynamic mechanisms so often
+advocated as essential to programming environments.[.goodwin environments.]
+.sp 1
+.SS 9 11
+.LP
+\fIAcknowledgements\fP.
+D. S. Chimenti implemented
+major components of the initial version of \*S, and
+R. L. Campbell and C. J. Lerner made improvements.
+.[]

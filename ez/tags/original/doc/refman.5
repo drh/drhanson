@@ -1,0 +1,210 @@
+.NH
+Statements
+.PP
+Statements are executed sequentially in the order in which they appear.
+Various control structures provide for other orders of execution.
+The control structures are driven by the presence or absence of values.
+.PP
+Statements are usually terminated by the end of the line on which they appear.
+Statements may, however, be spread out
+over several lines for readability provided they are broken
+at points where it is obvious that they are continued on subsequent
+lines (see \(sc2).
+.NH 2
+Expression Statement
+.PP
+Most statements are simply expressions:
+.DL I
+expression-statement:
+	expression
+.DE
+Typical expression statements are assignments and procedure calls.
+.NH 2
+Null Statement
+.PP
+A lone semicolon is treated as a null statement:
+.DL I
+null-statement:
+	\fB;\fP
+.DE
+Null statements are sometimes used as the body of loops
+in cases where an empty body is needed.
+The null statement is the one case in which a statement
+may immediately follow another without an
+intervening newline.
+As such, semicolons may be used to place several statements
+on the same line, e.g.
+.PS
+a = 2; f(a, b); b = a \(pl 1
+.PE
+.NH 2
+Compound Statement
+.PP
+The compound statement permits several statements to be
+grouped together as one statement:
+.DL I
+compound-statement:
+	{ statement \fR[\fP statement \fR]\fP... }
+.DE
+.NH 2
+\fBif\fP Statement
+.PP
+The
+.B if
+statement is the basic conditional statement and permits
+a one- or two-way branch on the result of an expression:
+.DL I
+if-statement:
+	\fBif\fP \fR(\fP expression \fR)\fP statement
+	\fBif\fP \fR(\fP expression \fR)\fP statement \fBelse\fP statement
+.DE
+In both forms, the expression is evaluated.
+If it yields a value,
+the first substatement is executed.
+If the \fBelse\fP is specified and the expression does not yield a value,
+the second substatement is executed.
+.PP
+The `dangling else' ambiguity in nested
+.B if
+statements is resolved by associating an \fBelse\fP with the closest
+\fBif\fP that does not have an \fBelse\fP.
+.NH 2
+\fBwhile\fP Statement
+.PP
+In the
+.B while
+statement
+.DL I
+while-statement:
+	\fBwhile\fP \fR(\fP expression \fR)\fP statement
+.DE
+the expression is repeatedly evaluated until it fails to yield a value.
+The substatement is executed
+after each evaluation that yields a value.
+The result of the expression is examined \fIbefore\fP
+the substatement is executed, so that
+if the initial evaluation of the expression does not yield a value,
+the substatement is never executed.
+.NH 2
+\fBfor\fP Statement
+.PP
+There are two forms of the
+.B for
+statement:
+.DL I
+for-statement:
+	\fBfor\fP \fR(\fP \fR[\fP expression\s-2\d1\u\s0 \fR]\fP \fR;\fP \c
+\fR[\fP expression\s-2\d2\u\s0 \fR]\fP \fR;\fP \c
+\fR[\fP expression\s-2\d3\u\s0 \fR]\fP \fR)\fP
+		statement
+	\fBfor\fP \fR(\fP variable \fBin\fP expression \fR)\fP
+		statement
+.DE
+The first form is equivalent (in the absence of
+.B continue
+statements) to
+.DS
+.ft I
+.ta 3n 6n 9n 12n
+expression\s-2\d1\u\s0
+\fBwhile\fP \fR(\fP expression\s-2\d2\u\s0 \fR)\fP {
+	statement
+	expression\s-2\d3\u\s0
+	}
+.DE
+All of the expressions in the
+.B for
+statement are optional.
+If they are omitted, the meaning of the statement is identical
+to the corresponding expansion in terms of the
+.B while
+statement.
+Omitting all three expressions yields
+a non-terminating loop, which
+can be terminated by a
+.B break
+or
+.B return
+statement.
+.PP
+The second form of the
+.B for
+statement is used to sequence through tables.
+.I expression
+must yield a table.
+The
+.I variable
+is repeatedly assigned the index value of a table element until all elements
+have been accessed.
+For example,
+.PS
+for (i in t)
+	write(i, "\et", t[i], "\en")
+.DE
+writes the index and the value for each element of table
+.M t .
+If additional entries are added to the table
+within the body of the
+.B for
+statement, it is undefined whether or not they are encountered while
+sequencing through the remainder of the table.
+.NH 2
+\fBbreak\fP and \fBcontinue\fP Statements
+.PP
+The following statements are used to alter the flow of control
+within loops:
+.DL I
+break-statement:
+	\fBbreak\fP
+.sp .2v
+continue-statement:
+	\fBcontinue\fP
+.DE
+The
+.B break
+statement causes immediate termination
+of the innermost
+.B while
+or
+.B for
+loop in which it appears.
+Execution continues with the statement following the loop.
+Note that only the innermost loop is terminated, even if
+.B break
+appears in a nested loop.
+.PP
+The
+.B continue
+statement causes immediate transfer
+to the `next iteration' point of the innermost loop in which it appears.
+For a
+.B while
+statement, this point corresponds
+to the beginning of the conditional expression, i.e.
+to the `top' of the loop.
+For the first form of the
+.B for
+statement, control transfers to the beginning of its
+.I expression\s-2\d3\u\s0 .
+For the second form, the index of the next table element is assigned to 
+.I variable
+and control is transferred to the beginning of
+.I statement .
+.NH 2
+\fBreturn\fP Statement
+.PP
+The
+.B return
+statement is used to
+transfer control from a procedure to its caller:
+.DL I
+return-statement:
+	\fBreturn\fP
+	\fBreturn\fP expression
+.DE
+If an expression is given, it is evaluated and the result is transmitted
+to the caller of the procedure as the result of the procedure call.
+In the case of a bare \fBreturn\fP, no value is returned.
+An implicit return statement is supplied at the end of
+each procedure so that flowing off the end of a procedure
+causes a return (with no value).

@@ -1,0 +1,54 @@
+.NH
+Types
+.PP
+\*(EZ supports four types of data:
+numeric,
+string,
+table, and
+procedure.
+Numerics (integers and reals)
+serve their conventional purposes.
+Strings are sequences of characters.
+Tables are heterogeneous one-dimensional
+arrays that can be indexed by arbitrary values much like SNOBOL4 tables.
+Procedures serve their conventional purpose, but are data objects.
+Procedures are created by a procedure specification and
+tables are created by subscripting a variable or by
+a table expression (see \(sc4.1).
+.PP
+The type of a variable varies during execution and is
+the type of the value assigned to it.
+Values are converted to the appropriate types automatically
+as necessary for most operations.
+For arithmetic operations,
+both operands are converted to numeric types if possible.
+Only strings that conform to the
+syntax described in \(sc2 for numeric constants
+can be converted to numeric.
+Integer arithmetic is performed if both of the resulting
+operands are integers.
+Otherwise, the operands are
+converted to real, if necessary, and real arithmetic is performed.
+Reals are converted to integers by truncation.
+.PP
+For string operations,
+operands are converted to string if possible.
+Integers and reals are converted to the
+appropriate string representation.
+Tables are converted to strings by converting their
+contents to strings and concatenating the results.
+Procedures are converted to string by returning the source
+code presented to the compiler when they were compiled.
+.PP
+For procedure operations, values other than procedures
+are converted to string, if necessary, and then compiled
+as if the string were the body of a procedure.
+.PP
+The specific action of some operations depends on the types of the operands.
+In comparisons, for example, lexical comparison is performed
+if both operands are strings,
+arithmetic comparison is performed if either operand is numeric,
+and an arbitrary, but well defined, comparison operation
+is performed otherwise.
+.PP
+Failure of any automatic conversion results in a run-time error.

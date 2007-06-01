@@ -1,0 +1,23 @@
+kludge = 0
+
+procedure addmap(s, v, t)
+   if (size(s) == 0)
+      return
+   else if (type(t[s[1!1]]) == "table")
+      return (addmap(s[2:0], v, t[s[1!1]]))
+   else if (t[s[1!1]])
+      return
+   else {
+      t[s[1!1]] = mkmap(s[2:0], v)
+      return (t)
+      }
+end
+
+procedure mkmap(s, v) local t
+   if (size(s) == 0)
+      return (v)
+   else {
+      t[s[1!1]] = mkmap(s[2:0], v)
+      return (t)
+      }
+end

@@ -1,0 +1,25 @@
+\input macros
+\magnification=\magstep4
+\voffset=1 true in
+\font\bigrm=amr10 at 12 pt %\font\eightit=ami10 at 8pt
+\font\footrm=amr8 at 8 true pt \font\pt=amtt10
+\newif\ifLong
+\footline={\footrm Slide \folio\ifLong\hfill Long Version\fi\hfill\today}
+\def\Bullet{\bigskip$\bullet$\enspace\enspace}
+\def\NewPage{\vfill\eject\Longfalse}
+\def\EZ{{\sl EZ\/}}
+\catcode`\^^I=\active
+\def^^I{\hskip .4 true in}
+\parindent=0pt \catcode`\~=12
+\def\center{\leftskip=0pt plus 1fil \rightskip=\leftskip \parfillskip=0pt}
+\def\program{\begingroup\medskip\pt\catcode`\{=12 \catcode`\}=12}
+\def\endprogram{\endgroup}
+{\obeylines\center
+{\bigrm The \EZ\ System}
+\vskip 1 true in
+Christopher W. Fraser and David R. Hanson
+
+Department of Computer Science
+The University of Arizona
+}
+\bye

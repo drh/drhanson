@@ -1,0 +1,4 @@
+procedure cd(dir)
+	root[dir]["last"] = root
+	root = root[dir]
+end
