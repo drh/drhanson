@@ -1,0 +1,385 @@
+% general macros
+
+\ifx\macrosAreLoaded\relax\endinput\fi
+
+\catcode`@=11 % borrow the private macros of PLAIN (with care)
+
+\long\def\ignore#1{}		% \ignore{...stuff...}
+\def\today{\ifcase\month\or	% \today is today's date
+January\or February\or March\or April\or May\or June\or
+July\or August\or September\or October\or November\or December\fi
+\space\number\day, \number\year}
+\def\center{\obeylines		% \center to center lines
+\advance\leftskip by 0pt plus 1fil \rightskip=\leftskip %
+\parskip=0pt \parindent=0pt \parfillskip=0pt}
+
+% characters
+\def\]{\leavevmode\hbox{\tt\char`\ }} % visible space
+
+% rules
+\def\hairline{\hrule height 0.1pt\relax}
+
+% \settab{x} equates tabs to \hskip x
+\newskip\tabstop
+{\catcode`\^^I=\active
+\gdef\settab#1{\catcode`\^^I=\active \tabstop=#1 \def^^I{\hskip\tabstop}}}
+
+% program text
+\def\breakline{\hfil\break}
+\def\program{\begingroup \par \medbreak
+  \advance\medskipamount by \normalbaselineskip
+  \advance\medskipamount by -\baselineskip \obeylines \startprogram}
+\def\endprogram{\endgroup\medbreak\endgroup\vskip-\parskip\noindent}
+\let\beginprogram=\program
+{\obeylines \outer\gdef\startprogram#1
+   {\ttverbatim \parskip=0pt \spaceskip\ttglue \rightskip=0pt plus 2em%
+    \catcode`\\=0 \catcode`\|=\other \def\\{\char`\\}#1\settab\parindent%
+    \parindent=0pt \leftskip=\displayindent \obeylines%
+    \advance\normalbaselineskip by -1pt \normalbaselines}}
+
+% \listing{foo} gives \tt listing of foo (see The TeXbook, pp. 380-381)
+\def\listing#1{\par\begingroup\setupverbatim \input#1\endgroup}
+\def\uncatcodespecials{\def\do##1{\catcode`##1=12 }\dospecials}
+\newcount\lineno
+\def\setupverbatim{\tt \lineno=0 \def\par{\leavevmode\endgraf}%
+\settab{3em}\obeylines \uncatcodespecials \obeyspaces \setupeverypar}
+{\obeyspaces\global\let =\ } % let active space = control space
+{\catcode`\`=\active \gdef`{\relax\lq}}
+\def\setupeverypar{%
+\everypar{\advance\lineno by1 \llap{\sevenrm\the\lineno\ \ }}}
+
+% \plainlisting{foo} lists foo without line numbers
+\def\plainlisting#1{{\let\setupeverypar=\relax \listing{#1}}}
+
+% non-centered displays (see The TeXBook, pp. 420-421)
+\def\begindisplay{\begingroup\catcode`\^^I=4 \obeylines\startdisplay}
+{\obeylines\gdef\startdisplay#1
+  {$$\let^^M=\cr \displayindent=\parindent\relax %
+#1\halign\bgroup##\hfil&&\qquad##\hfil\cr}}
+\def\enddisplay{\crcr\egroup$$\endgroup}
+
+% left-adjusted displays (see The TeXBook, answer to Ex. 19.4, p. 326)
+% to use, specify \everydisplay{\leftdisplay}
+\def\leftdisplay#1$${\leftline{\indent$\displaystyle{#1}$}$$}
+
+% verbatim scanning
+\chardef\other=12
+\def\ttverbatim{\begingroup
+  \catcode`\\=\other  \catcode`\{=\other  \catcode`\}=\other
+  \catcode`\$=\other  \catcode`\&=\other  \catcode`\#=\other
+  \catcode`\%=\other  \catcode`\~=\other  \catcode`\_=\other
+  \catcode`\<=\other  \catcode`\>=\other
+  \catcode`\[=\other  \catcode`\]=\other
+  \catcode`\(=\other  \catcode`\)=\other
+  \catcode`\^=\other  \catcode`\`=\other
+  \def\par{\leavevmode\endgraf}\obeyspaces \tt}
+\outer\def\begintt{\def\par{\leavevmode\endgraf} \ttverbatim \obeylines
+   \parskip=0pt \catcode`\|=\other \rightskip-5pc \ttfinish}
+{\catcode`\|=0 |catcode`|\=\other % | is temporary escape character
+  |obeylines % end of line is active
+  |gdef|ttfinish#1^^M#2\endtt{#1|vbox{#2}|endgroup}}
+
+\def\endverbatim{\egroup\endgroup}
+\catcode`\|=\active
+{\obeylines \gdef|{\leavevmode \ttverbatim \spaceskip=\ttglue %
+\relax\ifmmode \hbox\bgroup \let|=\endverbatim \else \let|=\endgroup\fi}}
+
+% \nodisplayskip is used with \begintt to avoid excess white space
+\def\nodisplayskip{\abovedisplayskip=0pt \belowdisplayskip=0pt
+   \abovedisplayshortskip=0pt \belowdisplayshortskip=0pt}
+
+% revised version of \dospecials (from plain.tex) to add | < >
+\def\dospecials{\do\ \do\\\do\{\do\}\do\$\do\&%
+\do\#\do\^\do\^^K\do\_\do\^^A\do\%\do\~\do\|\do\<\do\>}
+
+% make all interesting fonts available
+\font\sixrm=cmr6
+\font\eightrm=cmr8
+\font\ninerm=cmr9
+\font\elevenrm=cmr10 at 11pt
+\font\twelverm=cmr10 at 12pt
+\font\sixsy=cmsy6
+\font\eightsy=cmsy8
+\font\ninesy=cmsy9
+\font\elevensy=cmsy10 at 11pt
+\font\twelvesy=cmsy10 at 12pt
+\skewchar\ninesy='60 \skewchar\eightsy='60 \skewchar\sixsy='60
+\skewchar\elevensy='60
+\skewchar\twelvesy='60
+\font\sixi=cmmi6
+\font\eighti=cmmi8
+\font\ninei=cmmi9
+\font\eleveni=cmmi10 at 11pt
+\font\twelvei=cmmi10 at 12pt
+\skewchar\ninei='177 \skewchar\eighti='177 \skewchar\sixi='177
+\skewchar\eleveni='177
+\skewchar\twelvei='177
+\font\sixbf=cmbx6
+\font\eightbf=cmbx8
+\font\ninebf=cmbx9
+\font\elevenbf=cmbx10 at 11pt
+\font\twelvebf=cmbx10 at 12pt
+\font\eightit=cmti8
+\font\nineit=cmti9
+\font\elevenit=cmti10 at 11pt
+\font\twelveit=cmti10 at 12pt
+\font\eightsl=cmsl8
+\font\ninesl=cmsl9
+\font\elevensl=cmsl10 at 11pt
+\font\twelvesl=cmsl10 at 12pt
+\font\eighttt=cmtt8
+\font\ninett=cmtt9
+\font\eleventt=cmtt10 at 11pt
+\font\twelvett=cmtt10 at 12pt
+\let\sc=\eightrm		% small caps
+\let\pt=\tt			% program text
+\hyphenchar\tentt=-1 % inhibit hyphenation in typewriter type
+\hyphenchar\twelvett=-1
+\hyphenchar\eleventt=-1
+\hyphenchar\ninett=-1
+\hyphenchar\eighttt=-1
+
+\newskip\ttglue		% macros to set point size and return to \rm
+\def\twelvepoint{\def\rm{\fam0\twelverm}%
+  \textfont0=\twelverm \scriptfont0=\ninerm \scriptscriptfont0=\sevenrm
+  \textfont1=\twelvei \scriptfont1=\ninei \scriptscriptfont1=\seveni
+  \textfont2=\twelvesy \scriptfont2=\ninesy \scriptscriptfont2=\sevensy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\twelveit}%
+  \textfont\itfam=\twelveit
+  \def\sl{\fam\slfam\twelvesl}%
+  \textfont\slfam=\twelvesl
+  \def\bf{\fam\bffam\twelvebf}%
+  \textfont\bffam=\twelvebf \scriptfont\bffam=\ninebf
+   \scriptscriptfont\bffam=\sevenbf
+  \def\tt{\fam\ttfam\twelvett}%
+  \textfont\ttfam=\twelvett
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=14pt
+  \let\sc=\tenrm
+  \let\big=\twelvebig
+  \setbox\strutbox=\hbox{\vrule height9.5pt depth4.5pt width\z@}%
+  \normalbaselines\rm}
+
+\def\elevenpoint{\def\rm{\fam0\elevenrm}%
+  \textfont0=\elevenrm \scriptfont0=\eightrm \scriptscriptfont0=\sixrm
+  \textfont1=\eleveni \scriptfont1=\eighti \scriptscriptfont1=\sixi
+  \textfont2=\elevensy \scriptfont2=\eightsy \scriptscriptfont2=\sixsy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\elevenit}%
+  \textfont\itfam=\elevenit
+  \def\sl{\fam\slfam\elevensl}%
+  \textfont\slfam=\elevensl
+  \def\bf{\fam\bffam\elevenbf}%
+  \textfont\bffam=\elevenbf \scriptfont\bffam=\eightbf
+   \scriptscriptfont\bffam=\sixbf
+  \def\tt{\fam\ttfam\eleventt}%
+  \textfont\ttfam=\eleventt
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=13pt
+  \let\sc=\eightrm
+  \let\big=\elevenbig
+  \setbox\strutbox=\hbox{\vrule height9.0pt depth4.0pt width\z@}%
+  \normalbaselines\rm}
+
+\def\tenpoint{\def\rm{\fam0\tenrm}%
+  \textfont0=\tenrm \scriptfont0=\sevenrm \scriptscriptfont0=\fiverm
+  \textfont1=\teni \scriptfont1=\seveni \scriptscriptfont1=\fivei
+  \textfont2=\tensy \scriptfont2=\sevensy \scriptscriptfont2=\fivesy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\tenit}%
+  \textfont\itfam=\tenit
+  \def\sl{\fam\slfam\tensl}%
+  \textfont\slfam=\tensl
+  \def\bf{\fam\bffam\tenbf}%
+  \textfont\bffam=\tenbf \scriptfont\bffam=\sevenbf
+   \scriptscriptfont\bffam=\fivebf
+  \def\tt{\fam\ttfam\tentt}%
+  \textfont\ttfam=\tentt
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=12pt
+  \let\sc=\eightrm
+  \let\big=\tenbig
+  \setbox\strutbox=\hbox{\vrule height8.5pt depth3.5pt width\z@}%
+  \normalbaselines\rm}
+
+\def\ninepoint{\def\rm{\fam0\ninerm}%
+  \textfont0=\ninerm \scriptfont0=\sixrm \scriptscriptfont0=\fiverm
+  \textfont1=\ninei \scriptfont1=\sixi \scriptscriptfont1=\fivei
+  \textfont2=\ninesy \scriptfont2=\sixsy \scriptscriptfont2=\fivesy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\nineit}%
+  \textfont\itfam=\nineit
+  \def\sl{\fam\slfam\ninesl}%
+  \textfont\slfam=\ninesl
+  \def\bf{\fam\bffam\ninebf}%
+  \textfont\bffam=\ninebf \scriptfont\bffam=\sixbf
+   \scriptscriptfont\bffam=\fivebf
+  \def\tt{\fam\ttfam\ninett}%
+  \textfont\ttfam=\ninett
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=11pt
+  \let\sc=\sevenrm
+  \let\big=\ninebig
+  \setbox\strutbox=\hbox{\vrule height8pt depth3pt width\z@}%
+  \normalbaselines\rm}
+
+\def\eightpoint{\def\rm{\fam0\eightrm}%
+  \textfont0=\eightrm \scriptfont0=\sixrm \scriptscriptfont0=\fiverm
+  \textfont1=\eighti \scriptfont1=\sixi \scriptscriptfont1=\fivei
+  \textfont2=\eightsy \scriptfont2=\sixsy \scriptscriptfont2=\fivesy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\eightit}%
+  \textfont\itfam=\eightit
+  \def\sl{\fam\slfam\eightsl}%
+  \textfont\slfam=\eightsl
+  \def\bf{\fam\bffam\eightbf}%
+  \textfont\bffam=\eightbf \scriptfont\bffam=\sixbf
+   \scriptscriptfont\bffam=\fivebf
+  \def\tt{\fam\ttfam\eighttt}%
+  \textfont\ttfam=\eighttt
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=9pt
+  \let\sc=\sixrm
+  \let\big=\eightbig
+  \setbox\strutbox=\hbox{\vrule height7pt depth2pt width\z@}%
+  \normalbaselines\rm}
+
+\def\tenmath{\tenpoint\fam-1 } % use after $ in ninepoint sections
+\def\tenbig#1{{\hbox{$\left#1\vbox to8.5pt{}\right.\n@space$}}}
+\def\ninebig#1{{\hbox{$\textfont0=\tenrm\textfont2=\tensy
+  \left#1\vbox to7.25pt{}\right.\n@space$}}}
+\def\eightbig#1{{\hbox{$\textfont0=\ninerm\textfont2=\ninesy
+  \left#1\vbox to6.5pt{}\right.\n@space$}}}
+
+% double-column formatting; see TUGboat 6, 1 (Mar. 1985)
+\newdimen\pagewidth \pagewidth=\hsize
+\newdimen\pageheight \pageheight=\vsize
+\newdimen\colwidth \newdimen\bigcolheight
+\colwidth=.5\hsize \advance\colwidth by -.5pc
+\bigcolheight=2\vsize \advance\bigcolheight by 1pc
+\newbox\partialpage
+\newdimen\savesize
+\def\begindoublecolumns{\begingroup
+  \savesize=\vsize
+  \output={\global\setbox\partialpage=\vbox{\unvbox255}}\eject
+  \output={\doublecolumnout}\hsize=\colwidth \vsize=\bigcolheight}
+\def\enddoublecolumns{\output={\balancecolumns}\eject
+  \global\output={\plainoutput}\global\vsize=\savesize
+  \endgroup \pagegoal=\vsize}
+
+\def\doublecolumnout{\dimen0=\pageheight
+  \advance\dimen0 by-\ht\partialpage
+  \advance\dimen0 by-\baselineskip
+  \dimen1=\dimen0
+  \ifvoid\topins\else \advance\dimen0 by-\ht\topins \fi
+  \ifvoid\footins\else \advance\dimen0 by-\ht\footins \fi
+  \splittopskip=\topskip \splitmaxdepth=\maxdepth
+  \vbadness=10000
+  \setbox0=\vbox{\ifvoid\topins\else\unvbox\topins\fi
+     \vsplit255 to\dimen0
+     \ifvoid\footins\else
+	\vskip\skip\footins\footnoterule\unvbox\footins\fi}
+  \setbox2=\vsplit255 to\dimen1
+  \onepageout\pagesofar
+  \global\vsize=\bigcolheight
+  \unvbox255 \penalty\outputpenalty}
+\def\onepageout#1{{\setbox255=\vbox{#1}
+  \hsize=\pagewidth \vsize=\pageheight \plainoutput}}
+\def\pagesofar{\unvbox\partialpage
+  \wd0=\hsize \wd2=\hsize \hbox to\pagewidth{\box0\hfil\box2}}
+\def\balancecolumns{\setbox0=\vbox{\unvbox255}\dimen0=\ht0
+  \advance\dimen0 by\topskip \advance\dimen0 by-\baselineskip
+  \divide\dimen0 by2 \splittopskip=\topskip
+  {\vbadness=10000 \loop \global\setbox3=\copy0
+    \global\setbox1=\vsplit3 to\dimen0
+    \ifdim\ht3>\dimen0 \global\advance\dimen0 by1pt \repeat}
+  \setbox0=\vbox to\dimen0{\unvbox1}
+  \setbox2=\vbox to\dimen0{\unvbox3}
+  \global\output={\balancingerror}
+  \pagesofar}
+\newhelp\balerrhelp{Please change the page into one that works.}
+\def\balancingerror{\errhelp=\balerrhelp
+  \errmessage{Page can't be balanced} {\hsize=\pagewidth \plainoutput}}
+\def\pagesofar{\unvbox\partialpage
+  \wd0=\hsize \wd2=\hsize \hbox to\pagewidth{\box0\hfil\box2}}
+\def\balancecolumns{\setbox0=\vbox{\unvbox255} \dimen0=\ht0
+  \advance\dimen0 by\topskip \advance\dimen0 by-\baselineskip
+  \divide\dimen0 by2 \splittopskip=\topskip
+  {\vbadness=10000 \loop \global\setbox3=\copy0
+    \global\setbox1=\vsplit3 to\dimen0
+    \ifdim\ht3>\dimen0 \global\advance\dimen0 by1pt \repeat}
+  \setbox0=\vbox to\dimen0{\unvbox1}
+  \setbox2=\vbox to\dimen0{\unvbox3}
+  \global\output={\balancingerror}
+  \pagesofar}
+\newhelp\balerrhelp{Please change the page into one that works.}
+\def\balancingerror{\errhelp=\balerrhelp
+  \errmessage{Page can't be balanced} {\hsize=\pagewidth \plainoutput}}
+
+% fix beginsection from plain tex
+\outer\def\beginsection#1\par{\filbreak\bigskip
+   \message{#1}\leftline{\bf#1}\nobreak\smallskip\vskip-\parskip\noindent}
+\catcode`@=12 % put @ back to normal character
+
+\let\macrosAreLoaded=\relax
+
+% macros for program listings; used by texlist output
+
+\newwrite\toc	% for table contents entries
+\immediate\openout\toc=CONTENTS
+\newcount\firstpageno \newtoks\filename
+\def\beginfile#1{\bigskip
+  \filename={#1}\firstpageno=\pageno 
+  \message{#1}\leftline{\tt#1}\nobreak\smallskip\vskip-\parskip\noindent
+  \startfile}
+\def\endfile{\message{\the\lineno}%
+\immediate\write\toc{\string\entry{\the\filename}{\the\firstpageno}%
+{\the\lineno}}\endgroup\vfill\eject}
+\def\beginindex{\vfill\eject
+  \immediate\write\toc{\string\entry{Index}{\the\pageno}{0}}
+  \message{Index}\leftline{\bf Index}\nobreak\medskip\begindoublecolumns
+  \parindent=0pt \parskip=0pt plus.5pt \eightpoint \everypar={\hangindent=1em}
+  \exhyphenpenalty=10000 \rightskip=0pt plus2em \catcode`\_=\other}
+\def\endindex{\enddoublecolumns}
+\def\newletter{\medbreak\hangindent=1em}
+\def\startfile{\ttverbatim \parskip=0pt plus .5pt \obeylines \spaceskip\ttglue
+  \rightskip=0pt plus 2em \catcode`\\=0 \catcode`\|=\other
+  \def\\{\char`\\} \parindent=0pt \lineno=0 \relax
+  \everypar{\advance\lineno by1 {\sevenrm
+    \hbox to 1.5em{\hss\the\lineno}\ \ }}\relax
+  \advance\normalbaselineskip by -1pt \normalbaselines}
+\def\endoflisting{\immediate\closeout\toc\vfill\eject\dotableofcontents}
+\def\leaderfill{\leaders\hbox to .5em{\hss.\hss}\hfill}
+\def\entry#1#2#3{\ifnum\number#3=0
+  \smallskip\line{\qquad#1\ \leaderfill\ #2\qquad}\else
+  \line{\qquad\tt#1\ \rm(#3 lines)\ \leaderfill\ #2\qquad}\fi}
+\def\dotableofcontents{\nopagenumbers
+  \tenpoint \centerline{\twelvebf Table of Contents}
+  \bigskip\input CONTENTS\bigskip\leftline{\qquad\ninepoint\today}}
+
+% redefinition of the above macros for 2-up listings
+% assumes output will be printed in landscape mode on 8.5 by 11 paper
+% uses the double column macros, but suppresses column balancing
+\def\landscape{\message{landscape mode}\special{ps: landscape}
+  \let\landscape=\relax
+  \hoffset=-.5in \pagewidth=10in \pageheight=6.75in
+  \colwidth=.5\pagewidth \advance\colwidth by -.5pc
+  \bigcolheight=2\pageheight \advance\bigcolheight by 1pc
+\def\beginfile##1{\bigskip
+  \filename={##1}\firstpageno=\pageno 
+  \message{##1}\leftline{\tentt##1}\nobreak\smallskip\vskip-\parskip\noindent
+  \eightpoint\startfile}
+\def\endfile{\message{\the\lineno}%
+\immediate\write\toc{\string\entry{\the\filename}{\the\firstpageno}%
+{\the\lineno}}\endgroup}
+\def\enddoublecolumns{\output={\balancecolumns}\eject
+  \global\output={\doublecolumnout}\vfill\eject
+  \global\output={\plainoutput}\global\vsize=\savesize
+  \endgroup \pagegoal=\vsize}
+\def\endoflisting{\immediate\closeout\toc\vfill\eject\begingroup
+  \vsize=\pageheight\hsize=\pagewidth\def\qquad{\hskip2in}\dotableofcontents
+  \vfill\eject\endgroup}
+\begindoublecolumns
+}
+\def\portrait{\relax}

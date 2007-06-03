@@ -1,0 +1,175 @@
+% replace TeX fonts with PostScript fonts.
+% tfm files are those provided with dvips (dvi/laser) by ArborText
+
+\ifx\fontsAreLoaded\relax\endinput\fi
+
+\catcode`@=11 % borrow the private macros of PLAIN (with care)
+
+\font\sixrm=psmtimr at 6pt	% Times-Roman
+\font\sevenrm=psmtimr at 7pt
+\font\eightrm=psmtimr at 8pt
+\font\ninerm=psmtimr at 9pt
+\font\tenrm=psmtimr at 10pt
+\font\elevenrm=psmtimr at 11pt
+\font\twelverm=psmtimr at 12pt
+\font\sixsy=cmsy6
+\font\eightsy=cmsy8
+\font\ninesy=cmsy9
+\font\elevensy=cmsy10 at 11pt
+\font\twelvesy=cmsy10 at 12pt
+\skewchar\ninesy='60 \skewchar\eightsy='60 \skewchar\sixsy='60
+\skewchar\elevensy='60
+\skewchar\twelvesy='60
+\font\sixi=cmmi6
+\font\eighti=cmmi8
+\font\ninei=cmmi9
+\font\eleveni=cmmi10 at 11pt
+\font\twelvei=cmmi10 at 12pt
+\skewchar\ninei='177 \skewchar\eighti='177 \skewchar\sixi='177
+\skewchar\eleveni='177
+\skewchar\twelvei='177
+\font\sixbf=psmtimb at 6pt	% Times-Bold
+\font\eightbf=psmtimb at 8pt
+\font\ninebf=psmtimb at 9pt
+\font\tenbf=psmtimb at 10pt
+\font\elevenbf=psmtimb at 11pt
+\font\twelvebf=psmtimb at 12pt
+\font\eightit=psmtimi at 8pt	% Times-Italic
+\font\nineit=psmtimi at 9pt
+\font\tenit=psmtimi at 10pt
+\font\elevenit=psmtimi at 11pt
+\font\twelveit=psmtimi at 12pt
+\font\eightsl=psmhlvo at 8pt	% Helvetica-Oblique
+\font\ninesl=psmhlvo at 9pt
+\font\tensl=psmhlvo at 10pt
+\font\elevensl=psmhlvo at 11pt
+\font\twelvesl=psmhlvo at 12pt
+\font\eighttt=psmcoub at 8pt	% Courier-Bold
+\font\ninett=psmcoub at 9pt
+\font\tentt=psmcoub at 10pt
+\font\eleventt=psmcoub at 11pt
+\font\twelvett=psmcoub at 12pt
+\let\sc=\eightrm		% small caps
+\let\pt=\tt			% program text
+\hyphenchar\tentt=-1 % inhibit hyphenation in typewriter type
+\hyphenchar\twelvett=-1
+\hyphenchar\eleventt=-1
+\hyphenchar\ninett=-1
+\hyphenchar\eighttt=-1
+
+\newskip\ttglue		% macros to set point size and return to \rm
+\def\twelvepoint{\def\rm{\fam0\twelverm}%
+  \textfont0=\twelverm \scriptfont0=\ninerm \scriptscriptfont0=\sevenrm
+  \textfont1=\twelvei \scriptfont1=\ninei \scriptscriptfont1=\seveni
+  \textfont2=\twelvesy \scriptfont2=\ninesy \scriptscriptfont2=\sevensy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\twelveit}%
+  \textfont\itfam=\twelveit
+  \def\sl{\fam\slfam\twelvesl}%
+  \textfont\slfam=\twelvesl
+  \def\bf{\fam\bffam\twelvebf}%
+  \textfont\bffam=\twelvebf \scriptfont\bffam=\ninebf
+   \scriptscriptfont\bffam=\sevenbf
+  \def\tt{\fam\ttfam\twelvett}%
+  \textfont\ttfam=\twelvett
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=14pt
+  \let\sc=\tenrm
+  \let\big=\twelvebig
+  \setbox\strutbox=\hbox{\vrule height9.5pt depth4.5pt width\z@}%
+  \normalbaselines\rm}
+
+\def\elevenpoint{\def\rm{\fam0\elevenrm}%
+  \textfont0=\elevenrm \scriptfont0=\eightrm \scriptscriptfont0=\sixrm
+  \textfont1=\eleveni \scriptfont1=\eighti \scriptscriptfont1=\sixi
+  \textfont2=\elevensy \scriptfont2=\eightsy \scriptscriptfont2=\sixsy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\elevenit}%
+  \textfont\itfam=\elevenit
+  \def\sl{\fam\slfam\elevensl}%
+  \textfont\slfam=\elevensl
+  \def\bf{\fam\bffam\elevenbf}%
+  \textfont\bffam=\elevenbf \scriptfont\bffam=\eightbf
+   \scriptscriptfont\bffam=\sixbf
+  \def\tt{\fam\ttfam\eleventt}%
+  \textfont\ttfam=\eleventt
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=13pt
+  \let\sc=\eightrm
+  \let\big=\elevenbig
+  \setbox\strutbox=\hbox{\vrule height9.0pt depth4.0pt width\z@}%
+  \normalbaselines\rm}
+
+\def\tenpoint{\def\rm{\fam0\tenrm}%
+  \textfont0=\tenrm \scriptfont0=\sevenrm \scriptscriptfont0=\fiverm
+  \textfont1=\teni \scriptfont1=\seveni \scriptscriptfont1=\fivei
+  \textfont2=\tensy \scriptfont2=\sevensy \scriptscriptfont2=\fivesy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\tenit}%
+  \textfont\itfam=\tenit
+  \def\sl{\fam\slfam\tensl}%
+  \textfont\slfam=\tensl
+  \def\bf{\fam\bffam\tenbf}%
+  \textfont\bffam=\tenbf \scriptfont\bffam=\sevenbf
+   \scriptscriptfont\bffam=\fivebf
+  \def\tt{\fam\ttfam\tentt}%
+  \textfont\ttfam=\tentt
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=12pt
+  \let\sc=\eightrm
+  \let\big=\tenbig
+  \setbox\strutbox=\hbox{\vrule height8.5pt depth3.5pt width\z@}%
+  \normalbaselines\rm}
+
+\def\ninepoint{\def\rm{\fam0\ninerm}%
+  \textfont0=\ninerm \scriptfont0=\sixrm \scriptscriptfont0=\fiverm
+  \textfont1=\ninei \scriptfont1=\sixi \scriptscriptfont1=\fivei
+  \textfont2=\ninesy \scriptfont2=\sixsy \scriptscriptfont2=\fivesy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\nineit}%
+  \textfont\itfam=\nineit
+  \def\sl{\fam\slfam\ninesl}%
+  \textfont\slfam=\ninesl
+  \def\bf{\fam\bffam\ninebf}%
+  \textfont\bffam=\ninebf \scriptfont\bffam=\sixbf
+   \scriptscriptfont\bffam=\fivebf
+  \def\tt{\fam\ttfam\ninett}%
+  \textfont\ttfam=\ninett
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=11pt
+  \let\sc=\sevenrm
+  \let\big=\ninebig
+  \setbox\strutbox=\hbox{\vrule height8pt depth3pt width\z@}%
+  \normalbaselines\rm}
+
+\def\eightpoint{\def\rm{\fam0\eightrm}%
+  \textfont0=\eightrm \scriptfont0=\sixrm \scriptscriptfont0=\fiverm
+  \textfont1=\eighti \scriptfont1=\sixi \scriptscriptfont1=\fivei
+  \textfont2=\eightsy \scriptfont2=\sixsy \scriptscriptfont2=\fivesy
+  \textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex
+  \def\it{\fam\itfam\eightit}%
+  \textfont\itfam=\eightit
+  \def\sl{\fam\slfam\eightsl}%
+  \textfont\slfam=\eightsl
+  \def\bf{\fam\bffam\eightbf}%
+  \textfont\bffam=\eightbf \scriptfont\bffam=\sixbf
+   \scriptscriptfont\bffam=\fivebf
+  \def\tt{\fam\ttfam\eighttt}%
+  \textfont\ttfam=\eighttt
+  \tt \ttglue=.5em plus.25em minus.15em
+  \normalbaselineskip=9pt
+  \let\sc=\sixrm
+  \let\big=\eightbig
+  \setbox\strutbox=\hbox{\vrule height7pt depth2pt width\z@}%
+  \normalbaselines\rm}
+
+\def\tenmath{\tenpoint\fam-1 } % use after $ in ninepoint sections
+\def\tenbig#1{{\hbox{$\left#1\vbox to8.5pt{}\right.\n@space$}}}
+\def\ninebig#1{{\hbox{$\textfont0=\tenrm\textfont2=\tensy
+  \left#1\vbox to7.25pt{}\right.\n@space$}}}
+\def\eightbig#1{{\hbox{$\textfont0=\ninerm\textfont2=\ninesy
+  \left#1\vbox to6.5pt{}\right.\n@space$}}}
+
+\catcode`@=12 % put @ back to normal character
+
+\let\fontsAreLoaded=\relax

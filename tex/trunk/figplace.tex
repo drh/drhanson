@@ -1,0 +1,390 @@
+% name: figplace.tex
+
+% programmer: Joost Zalmstra
+
+% version/date: Version(1.8)  of 89/16/1 08:30:00
+
+% language: Plain \TeX
+
+% purpose: Implementation of a floating keep that allows
+%          better control of the placement of figures
+
+% history: Based on David Rogers tests and comments the original macro
+%          was modified as follows:
+%          Added separate \topfigureskip and \bottomfigureskip to partially
+%          solve the problem of unequal spaces between a topfigure and the
+%          text and a bottomfigure and the text.
+%          Corrected problem of loss of all subsequent figures if a
+%          figure + caption is larger than \vsize.
+%          Added code to approximately center the text between a topfigure and 
+%          a bottomfigure on the same page.
+%          Added code to push a figure larger than \vsize - \minpagesize to the 
+%          bottom of the page.
+%          Added code to force a single figure on the page to be at the
+%          bottom of the page.
+
+% declaration of some registers
+
+\newif\ifbottomforce      \bottomforcetrue
+\newbox\figlist
+\newcount\figuresonpage   \figuresonpage=0
+\newcount\figuresonlist   \figuresonlist=0
+\newskip\topfigureskip    \topfigureskip=1.25 pc
+\newskip\bottomfigureskip \bottomfigureskip=1.5 pc
+\newdimen\pagesize
+\newdimen\minpagesize     \minpagesize=5 pc
+\newdimen\figuresizeonpage
+
+\input figspace.tex%        % \figspace is the macro that actually sets the white space
+%                           % for the art and the figure caption.
+%                           % It is independent of \figplace.|
+
+% user interface for inclusion of figures
+
+\catcode`@=11 %             %  borrowing macros from plain TeX
+
+% Note: the redefinition of \raggedbottom has nothing to do with
+%       the implementation of \addfigure. It is only placed here
+%       because \raggedbottom uses @ as a letter
+
+\def\raggedbottom{\topskip10pt plus 24pt \r@ggedbottomtrue}
+
+\def\figplace#1#2#3#4{%
+  \setbox0=\vbox{%
+    \figspace{#1}{#2}{#3}{#4}
+  }
+  \addfigure0
+}
+
+% add figure in box #1 to the document
+
+\def\addfigure#1{%
+    \dimen0=\ht#1
+    \ifdim\dimen0>\vsize%            % be sure it will fit
+      \message{figure to big}
+      \setbox#1=\vbox to \vsize{\box#1}
+    \fi
+    \ifnum\figuresonpage>1%          % already two figures on this page
+      \addtolist{#1}%                % so save for later
+    \else\ifnum\figuresonlist>0%     % figlist is not empty
+      \addtolist{#1}%                % so save for later
+    \else%                           % no figures left over, so try to fit this one
+      \dimen0=\ht#1
+      \ifdim\dimen0<\vsize%          % not a pagesize figure
+         \advance\dimen0 by \dp#1%   % size of the box
+         \ifnum\figuresonpage=0
+           \advance\dimen0 by \topfigureskip%      % extra space below
+         \else
+           \advance\dimen0 by \bottomfigureskip%   % extra space above
+         \fi
+      \fi
+      \dimen1=\dimen0
+      \advance\dimen0 by \pagetotal
+      \ifdim\dimen0>\pagegoal%            % no space on this page
+        \addtolist{#1}%                   % so save for later
+      \else 
+        \advance\dimen1 by \figuresizeonpage
+        \ifdim\dimen1>\dimen\topins%      % exceeding maximum insertion size
+            \addtolist{#1}%               % so save for later
+        \else%                            % insert figure
+          \ifnum\figuresonpage=0%         % force a bottom insert
+            \ifbottomforce%               % by adding an empty box first
+              {\setbox1=\vbox{%
+                 \vskip -\topfigureskip}% compensate for figureskip
+              \figureinsert1}
+            \fi
+          \fi
+          \figureinsert{#1}%              % insert the figure
+        \fi
+      \fi
+    \fi\fi
+}
+
+% \addtolist adds \box#1 to the FIFO queue \figlist
+
+\def\addtolist#1{%
+    \global\setbox\figlist=\vbox{%
+        \nointerlineskip
+        \box#1
+        \unvbox\figlist}
+    \global\advance\figuresonlist by 1
+}
+
+% \figureinsert inserts \box#1 using Plain \TeX's \topinsert
+% and updates the registers \figuresizeonpage and \figuresonpage
+
+\def\figureinsert#1{%
+    \dimen0=\ht#1
+    \advance\dimen0 by \dp#1
+    \ifdim\ht#1<\vsize%                           % not a full page figure
+        \ifnum\figuresonpage=0
+           \advance\dimen0 by \topfigureskip
+           \insert\topins{\vbox{%
+             \unvbox#1\vskip\topfigureskip}}%     % skip below the figure
+        \else
+           \advance\dimen0 by \bottomfigureskip
+           \insert\topins{\vbox{%
+             \vskip\bottomfigureskip\unvbox#1}}%  % skip above the figure
+         \fi
+    \else%                                        % full page figure
+        \pageinsert
+            \unvbox#1
+        \endinsert
+    \fi
+    \global\advance\figuresonpage by 1
+    \global\advance\figuresizeonpage by \ht#1
+    \global\advance\figuresizeonpage by \dp#1
+    \ifnum\figuresonpage=0
+       \global\advance\figuresizeonpage by \topfigureskip
+    \else
+       \global\advance\figuresizeonpage by \bottomfigureskip
+    \fi
+}
+
+% see if there is a figure in the list that will fit on the next page
+% return \box0 containing the figure or void if no figure will fit
+
+\def\checkfiglist{%
+    \ifnum\figuresonlist>0 %                % there are figures on the queue
+        \global\setbox\figlist=\vbox{%
+            \unvbox\figlist
+            \setbox0=\lastbox%              % \box0 contains first figure
+            \global\advance\dimen0\ht0
+            \ifdim\ht0<\vsize
+                \global\advance\dimen0 by \dp0
+                \ifnum\figuresonpage=0
+%                                           % topfigure may loose \figureskip
+                \else
+                   \global\advance\dimen0 by \bottomfigureskip
+                \fi
+            \fi
+            \ifdim\dimen0>\vsize%           % test if it will fit
+                 \vbox{\box0}%              % no room ; replace the figure
+            \else
+                \ifdim\dimen0>\dimen\topins
+                    \vbox{\box0}%           % exceeding maximum insertion size
+                \else%                      % remove it from the queue
+                    \global\advance\figuresonlist by -1
+                \fi
+            \fi
+            \global\setbox0=\box0
+        }
+    \else%                                   % no figures left on the queue
+        {\global\setbox0=\box0\voidb@x}      % make box0 void
+    \fi
+}
+
+% output routines
+% note: these are just modifications of the Plain \TeX output routines
+
+\output{\myoutput}
+\def\myoutput{\shipout\vbox{\makeheadline\pagebody\makefootline}%
+  \advancepageno
+
+% reset \addfigure registers
+
+  \global\figuresonpage=0
+  \global\figuresizeonpage = 0pt
+  \dimen0=0pt%                    % \dimen0 contains \figuresizeonpage
+  \checkfiglist%                  % check if there is figure waiting that will fit
+  \ifvoid0%                       % nothing left
+  \else
+      \figureinsert0%             % insert this figure
+      \global\advance\dimen0 by \topfigureskip
+      \checkfiglist%              % check for a second figure
+      \ifvoid0\else
+          \figureinsert0
+       \fi
+  \fi
+  \ifvoid255\else\unvbox255\penalty\outputpenalty\fi%   % put unused page back on list
+  \ifnum\outputpenalty>-\@MM \else\dosupereject\fi}
+
+% actual contents of this page
+
+\def\pagecontents{%
+    \pagesize=\ht255
+    \advance\pagesize by \dp255%          % determine size of box 255
+    \ifnum\figuresonpage>0%               % check for insertion of figures
+        \unvbox\topins%                   % place the figure(s) on top
+        \ifdim\pagesize>\minpagesize
+           \ifnum\figuresonpage=2
+               \setbox0=\lastbox%         % place the second figure in \box0
+           \fi
+           \setbox1=\lastbox
+           \unvbox1%                      % remove surrounding box
+        \else%                            % no text is produced on this page
+          \ifnum\figuresonpage=1
+             \setbox0=\lastbox
+             \vfill%                      % figure becomes bottomfigure
+             \unvbox0%                    % remove surrounding box
+             \unskip%                     % remove \topfigureskip
+          \fi
+        \fi
+    \fi
+
+% topfigure is placed on this page
+% put the text on this page if it is large enough
+
+     \ifdim\pagesize>\minpagesize
+        \dimen@=\dp255 \unvbox255%       % the real page contents
+        \ifr@ggedbottom \kern-\dimen@\vfil\fi
+     \else
+        \ifdim\ht255=0pt%                 % box is empty
+        \else
+           \vfil%                         % too small so leave for next page
+        \fi
+     \fi
+
+% Produce the second figure, if present
+    \ifnum\figuresonpage=2
+        \box0%                            % second figure
+    \fi
+
+% produce possible footnotes
+    \ifvoid\footins\else%                 % footnote is present
+      \vskip\skip\footins
+      \footnoterule
+      \unvbox\footins\fi
+}
+\catcode`@=12%                            % at signs no longer letters
+
+
+
+% name: figspace.tex
+
+% programmer: David F. Rogers
+
+% version/date: Version(1.6) of 89-16-01 08:30:00
+
+% language: Plain \TeX
+
+% purpose: To provide white space for stripped in art and set the caption for the art
+
+% history: Modified by Joost Zalmstra to work more efficiently with the \figplace macro
+%          Added code to check for nearly page size figure, expand it to fill the page
+%          and print a message to that effect.
+
+%          Added code to check for figure + caption larger than page size, to
+%          reduce the figure size (parameter #1) so that the art plus caption just
+%          fills the page and to print a message to that effect.
+
+% define top and bottom cornerrules to indicate the size of the art
+
+\newdimen\ruleht     \ruleht=0.5pt%        % take the rules out for final
+\newdimen\ruledpth   \ruledpth=0pt%        %  production by setting
+\newdimen\rulelength \rulelength=1pc%      % \ruleht=0pt and \rulelength=0pt
+
+\def\settopcornerrules#1{\hbox to #1{\vrule width\rulelength height\ruleht
+        \hfil \vrule width \rulelength}
+    \hbox to #1{\vrule height\rulelength width\ruleht depth\ruledpth
+        \hfil \vrule width\ruleht depth\ruledpth}}
+
+\def\setbotcornerrules#1{% 
+        \vskip  -2\rulelength% 
+        \hbox to #1{\vrule height\rulelength width\ruleht depth\ruledpth% 
+        \hfil \vrule width\ruleht depth\ruledpth}% 
+    \vskip -\rulelength% 
+    \hbox to #1{\vrule width \rulelength height\ruleht%
+        \hfil \vrule width \rulelength}
+}
+
+% define a figure caption macro
+% #1 is the figure number #2 is the caption
+% the caption is to be set in a `box' left and right justified 1em to
+% the right of the figure number
+% the size to the box containing the word Figure, its number and the 1em
+% skip is found in box0
+% box1 is \hsize less the width of box0. 
+% a \vtop is used along with an \halign to obtain the flush left and right
+% effect.
+
+\def\figcap#1#2{{%
+    \setbox0=\hbox{{\bf Figure #1}\hskip 1em}%          
+    \setbox1=\vtop{\advance \hsize by -\wd0 \noindent
+                   \spaceskip=.3em plus .2em minus.2em
+                   #2}
+    \halign{## & ## \cr
+            \box0 & \box1 \cr}}
+    \leavevmode
+}
+
+% define a figspace macro
+
+% A 1.5pc space is required above the art.
+% If a figure is more than 13pc wide then the caption is to be set 
+% below the art with a 1.5pc space between the art and the figcap.
+
+\newdimen\artsurround  \artsurround=1.5pc%   % space between art and the caption
+\newdimen\sidearttest  \sidearttest=13pc%    % if more than set side caption
+\newdimen\sideartspace \sideartspace=2em%    % horizontal space to caption
+
+\def\figspace#1#2#3#4{%
+    \ifdim #2 > \sidearttest%
+        \normalfig{#1}{#2}{#3}{#4}
+    \else
+       \sidefig{#1}{#2}{#3}{#4}
+    \fi
+}
+
+% this is the case when the figure is wider than \sidearttest (13 pc's)
+
+\def\normalfig#1#2#3#4{%   #1 is vertical size in pc's
+%                          #2 is horizontal size in pc's
+%                          #3 is the figure number -- used in figcap
+%                          #4 is the figure caption -- used in figcap
+
+    \setbox0=\vbox{\figcap{#3}{#4}}
+    \dimen0=\ht0
+    \advance\dimen0 by \dp0
+    \advance\dimen0 by \artsurround
+    \dimen1=#1
+    \ifdim\dimen1 = 0 pt%            % figure should fill the rest of the page (jz)
+       \dimen1 = \vsize
+       \advance\dimen1 by -\dimen0
+       \message{expanding figure to \the\dimen1}
+    \else
+       \advance\dimen0 by \dimen1|
+       \ifdim\dimen0>\vsize%         % figure + caption larger than page size (jz)
+            \advance\dimen0 by -\vsize
+            \advance\dimen1 by -\dimen0
+            \message{warning: reducing vertical figure size to \the\dimen1}
+       \fi
+    \fi
+    \leftline{%                       % left justify the figure
+       \vbox to \dimen1{%
+           \settopcornerrules{#2}%   % set top corner rules
+            \vfill%                   % push the figcap down to bottom
+            \setbotcornerrules{#2}%  % set bottom corner rules
+        }%
+    }%
+    \nointerlineskip
+    \vskip \artsurround%              % put space between figure & caption
+    \box0%                            % set the caption
+}
+
+% this is the case when the caption is to be set to the right
+
+\def\sidefig#1#2#3#4{%     #1 is vertical size in pc's
+%                          #2 is horizontal size in pc's
+%                          #3 is the figure number -- used in figcap
+%                          #4 is the figure caption -- used in figcap
+
+    \ifdim#1>\vsize%      % figure + caption larger than page size (jz)
+       \dimen0=\vsize
+       \message{warning: reducing vertical figure size to \the\dimen0}
+   \else
+       \dimen0=#1
+   \fi
+   \setbox0=\vbox to \dimen0{%
+       \advance \hsize by -#2%              % reduce \hsize by the horiz.
+       \advance \hsize by -\sideartspace%   % size and blank space between
+       \vfill%                              % push the figcap down to bottom
+       {\figcap{#3}{#4}}%                   % of the box
+    }
+    \setbox1=\hbox to #2{\vbox to \ht0{
+       \settopcornerrules{#2}%              % set top corner rules
+       \vfill%                              % push the figcap down to bottom
+       \setbotcornerrules{#2}%              % set bottom corner rules
+    }}%
+    \hbox{\box1 \hskip \sideartspace \box0}%   actually do the setting
+}

@@ -1,0 +1,173 @@
+
+% The essential parts of this macro appeared in {\it TUGboat, Volume 3, No. 1}
+% in the note: "DISPLAY OF A FONT IN TABLE FORM." by Roger L. Beeman.
+% This version was rewritten by Pierre A. MacKay to take advantage of
+% the new features of \TeX82.  It is now interactive, and prompts the
+% user for a font name.  If the font is a text font, a sample paragraph
+% is set, which is justified to three times the lower-case alphabet length
+% if that will fit in the overall \hsize.  (If the font is a fixed-width
+% font such as "amtt", the sample is set with a ragged right margin.) 
+% The sample is leaded 20% over the stated point-size, so that a
+% 10-point font is set 10 on 12.  The length of both upper and lower
+% case alphabets is given, along with the height and depth of the
+% lower case alphabet and the height of the upper case alphabet.  These
+% last dimensions can be very useful for calculating the size of
+% close-fitting boxes and struts.
+%
+% Non-text fonts are displayed in table form only.
+%
+% If you have \TeX\ running with "plain.tex" loaded, 
+% you can start this macro by typing "tex fontbl" and you will be prompted
+% for the rest
+%
+\baselineskip 0pt \lineskip 0pt
+\vsize 8.5truein
+\let\sl=\tensl
+\newcount\bighand\newcount\littlehand
+\bighand=\time\divide\bighand by 60
+\littlehand=\bighand\multiply\littlehand by -60
+\advance\littlehand by\time
+\def\makedateline{\line{{\sl \fontname scaled \\magstep\step\hfil
+  \the\bighand:\ifnum\littlehand<10{0}\fi
+  \the\littlehand\ - \the\month/\the\day/\the\year}}}
+
+\output{\shipout\vbox{\hrule width1em\vskip 1ex
+\makedateline\vskip1em\box255\vskip1em
+\hrule width1em}\global\advance\count0 by 1}
+
+\newdimen\maxwide
+\dimendef\vu=\maxwide
+\setbox 9\hbox{\sl 0}
+
+\def\spike{\hbox to 0pt{\vbox to 1\ht9{}}}
+\def\cell#1{\hbox to \vu{\hfill\char'#1\hfill}\vrule}
+\def\label#1{\vbox to 1\ht8{\vfill
+  \hbox to 35pt{\hfill\sl '#10\hskip1em}\vfill}\vrule}
+
+\def\seprow{\def\m{\hskip \vu{}\vrule height 2pt}\hbox{\m\m\m\m\m\m\m\m}}
+\def\cellrow#1{\setbox 8\vbox{\seprow\hbox{\spike\ignorespaces
+               \cell{#10}\cell{#11}\cell{#12}\cell{#13}\ignorespaces
+               \cell{#14}\cell{#15}\cell{#16}\cell{#17}\ignorespaces
+               \hfill}\seprow\hrule}\hbox{\label{#1}\box8}}
+
+\def\lcol#1{\hbox to \vu{\hfill{\sl #1}\hfill}\hskip .4pt}
+\def\chw#1{\hbox{\char'#1}}
+
+\def\colw#1{\vbox{\chw{#10}
+                  \chw{#11}
+                  \chw{#12}
+                  \chw{#13}
+                  \chw{#14}
+                  \chw{#15}
+                  \chw{#16}                                              
+                  \chw{#17}}}
+
+\def\setw#1{\vbox{\colw{#10}             
+                  \colw{#11}
+                  \colw{#12}
+                  \colw{#13}
+                  \colw{#14}
+                  \colw{#15}
+                  \colw{#16}
+                  \colw{#17}}}
+\def\getw{\setbox 0\vbox{\setw0\setw1\hbox to 1\wd9{}
+          \hbox to 1em{}}\vu=1.625\wd0}
+ 
+\def\table#1{\font\tablefont=#1 scaled \scale
+\tablefont\getw\null\vfil
+\hbox to 6in{\hfil\ignorespaces
+\vbox{\ifdim\fontdimen2\tablefont>0pt \hbox{\hskip35pt \fontname \hfil} \fi 
+      \vskip10pt
+      \hbox{\hskip35pt\lcol0\lcol1\lcol2\lcol3\lcol4\lcol5\lcol6\lcol7}
+      \vskip 4 pt
+      \hbox{\hskip35pt\vbox{\hrule width 8\vu}\vbox{\hrule width 3.6pt}}
+      \cellrow{00}\cellrow{01}\cellrow{02}\cellrow{03}
+      \cellrow{04}\cellrow{05}\cellrow{06}\cellrow{07}
+      \cellrow{10}\cellrow{11}\cellrow{12}\cellrow{13}
+      \cellrow{14}\cellrow{15}\cellrow{16}\cellrow{17}}\ignorespaces
+\hss}}
+\def\tblraggedright{\rightskip0pt plus5em}
+
+\global\def\test{}
+\global\def\fin{END }
+\global\def\lcfin{end }
+\global\def\halfstep{half }
+\def\\{$\backslash$}
+\def\doit{
+\baselineskip 0pt \lineskip 0pt 
+\message{Type a valid font name, or type END to quit :}
+\read16 to\fontname
+\ifx\fontname\lcfin\let\test=\fin\else\global\let\test=\fontname\fi
+\ifx \fin\test \relax 
+\else \message{Scaled to what magstep? (half, or 0..5):}
+\read16 to\step
+\ifx \halfstep\step \global\def\scale{1095 } \else 
+  \global\def\scale{\ifcase\step 1000\or 
+    1200\or 1440\or 1728\or 2074\or 2488\fi\relax}
+  \fi
+\message{Graphing font \fontname}
+       \table{\fontname}
+\rightskip 0pt % So that one ragged right font doesn't affect all
+%    following fonts
+\vskip 1em
+\ifdim\fontdimen2\tablefont>0pt
+  \setbox8=\hbox{abcdefghijklmnopqrstuvwxyz}
+  \setbox7=\hbox{ABCDEFGHIJKLMNOPQRSTUVWXYZ}
+  \global\dimen8=1\wd8\global\dimen7=.5\hsize
+  \global\dimen5=1\ht8\global\dimen4=1\dp8\global\dimen3=1\ht7
+  \edef\length{\the\dimen8}
+  \global\dimen6=\dimen8\global\multiply\dimen6 by 3
+  \ifdim\dimen6>\hsize \global\dimen6=\hsize \fi
+  \ifdim\fontdimen3\tablefont=0pt \tblraggedright
+     \global\advance\dimen6 by -40pt \fi  
+  \vskip 1em
+  \noindent
+  \ifdim\dimen8<\dimen6 
+    \line{\unhbox8\hfil }
+    \vskip 1ex \fi
+  \centerline{{\rm Alphabet length \length. Quad is \the\fontdimen6\tablefont}}
+  \vskip .25em
+  \centerline{{\rm Lower case height is \the\dimen5 ; depth is \the\dimen4}}
+    \vskip 1em
+    \global\dimen8=1\wd7 \edef\length{\the\dimen8}
+    \noindent
+  \ifdim\dimen8<\dimen6 
+    \line{\unhbox7 \hfil}
+    \vskip 1ex  \fi
+    \centerline{{\rm Alphabet length \length ; height \the\dimen3}}
+  \vskip 1em \vfil
+  \vbox{\hsize \dimen6
+  \baselineskip 1.2em
+  \parskip .15em
+  \lineskip .2em
+
+The design of low-resolution typefaces is complicated by the need 
+to achieve two different and rather incompatible ends.  A font which is
+exclusively intended for Office Automation equipment should be designed 
+to make the very best use of that environment.  Its proportions, balance,
+shading and letter-spacing can and indeed must be fitted to exact
+pixel-bound\-aries, whe\-ther or not the refinements of anti-aliasing are
+used.  
+
+A low-resolution font which was created primarily as the proof-copy
+imitation of an associated high-resolu\-tion font will never be quite 
+so precisely matched to its environment.  Its contours will necessarily be
+determined by exact pixel-boundaries, but often not in the way we might
+prefer.  It need not be sloppy, but it can never be so well tuned as 
+a font of the first variety.  It is a poor Platonic reflection of an
+idea that cannot be fully known except in the dazzling light
+of high-resolution typesetting.  The vast majority of fonts produced
+with METAFONT belong to this second variety.  A low-resolution
+METAFONT character should be judged for what it is, and not for what
+it has never claimed to be.
+}
+\fi
+
+\vfill\penalty-10000
+
+\doit
+\fi
+}
+
+\doit
+\bye

@@ -1,0 +1,165 @@
+% general macros
+
+\ifx\macrosAreLoaded\relax\endinput\fi
+
+\catcode`@=11 % borrow the private macros of PLAIN (with care)
+
+\output{\shipout\vbox{\makeheadline\pagebody\makefootline}%
+  \advancepageno
+  \ifnum\outputpenalty>-\@MM \else\dosupereject\fi}
+
+%load fonts
+\input fonts
+\catcode`@=11 % in case reset in fonts.tex
+
+\long\def\ignore#1{}		% \ignore{...stuff...}
+\def\themonth{\ifcase\month\or	% \themonth is today's month
+January\or February\or March\or April\or May\or June\or
+July\or August\or September\or October\or November\or December\fi}
+\def\today{\themonth		% \today is today's date
+\space\number\day, \number\year}
+\def\center{\obeylines		% \center to center lines
+\advance\leftskip by 0pt plus 1fil \rightskip=\leftskip %
+\parskip=0pt \parindent=0pt \parfillskip=0pt}
+
+% characters
+\def\]{\leavevmode\hbox{\tt\char`\ }} % visible space
+
+% rules
+\def\hairline{\hrule height 0.1pt\relax}
+
+% \settab{x} equates tabs to \hskip x
+\newskip\tabstop
+{\catcode`\^^I=\active
+\gdef\settab#1{\catcode`\^^I=\active \tabstop=#1 \def^^I{\hskip\tabstop}}}
+
+% text
+\def\singlespace{\normalbaselineskip=12pt \normalbaselines}
+\def\doublespace{\normalbaselineskip=18pt \normalbaselines}
+
+% program text
+\def\breakline{\hfil\break}
+\def\program{\begingroup \par \medbreak
+  \advance\medskipamount by \normalbaselineskip
+  \advance\medskipamount by -\baselineskip \obeylines \startprogram}
+\def\endprogram{\endgroup\medbreak\endgroup\vskip-\parskip\noindent}
+\let\beginprogram=\program
+{\obeylines \outer\gdef\startprogram#1
+   {\ttverbatim \parskip=0pt \spaceskip\ttglue \rightskip=0pt plus 2em%
+    \catcode`\\=0 \catcode`\|=\other \def\\{\char`\\}\singlespace%
+    #1\settab\parindent%
+    \parindent=0pt \leftskip=\displayindent \obeylines%
+    \advance\normalbaselineskip by -1pt \normalbaselines}}
+
+% \listing{foo} gives \tt listing of foo (see The TeXbook, pp. 380-381)
+\def\listing#1{\par\begingroup\setupverbatim \input#1\endgroup}
+\def\uncatcodespecials{\def\do##1{\catcode`##1=12 }\dospecials}
+\newcount\lineno
+\def\setupverbatim{\tt \lineno=0 \def\par{\leavevmode\endgraf}%
+\settab{3em}\obeylines \uncatcodespecials \obeyspaces \setupeverypar}
+{\obeyspaces\global\let =\ } % let active space = control space
+{\catcode`\`=\active \gdef`{\relax\lq}}
+\def\setupeverypar{%
+\everypar{\advance\lineno by1 \llap{\sevenrm\the\lineno\ \ }}}
+
+% \plainlisting{foo} lists foo without line numbers
+\def\plainlisting#1{{\let\setupeverypar=\relax \listing{#1}}}
+
+% non-centered displays (see The TeXBook, pp. 420-421)
+\def\begindisplay{\begingroup\catcode`\^^I=4 \obeylines\startdisplay}
+{\obeylines\gdef\startdisplay#1
+  {$$\let^^M=\cr \displayindent=\parindent\singlespace\relax %
+#1\halign\bgroup##\hfil&&\qquad##\hfil\cr}}
+\def\enddisplay{\crcr\egroup$$\endgroup}
+
+% left-adjusted displays (see The TeXBook, answer to Ex. 19.4, p. 326)
+% to use, specify \everydisplay{\leftdisplay}
+\def\leftdisplay#1$${\leftline{\indent$\displaystyle{#1}$}$$}
+
+% verbatim scanning
+\chardef\other=12
+\def\ttverbatim{\begingroup
+  \catcode`\\=\other  \catcode`\{=\other  \catcode`\}=\other
+  \catcode`\$=\other  \catcode`\&=\other  \catcode`\#=\other
+  \catcode`\%=\other  \catcode`\~=\other  \catcode`\_=\other
+  \catcode`\<=\other  \catcode`\>=\other
+  \catcode`\[=\other  \catcode`\]=\other
+  \catcode`\(=\other  \catcode`\)=\other
+  \catcode`\^=\other  \catcode`\`=\other
+  \def\par{\leavevmode\endgraf}\obeyspaces \tt}
+\outer\def\begintt{\def\par{\leavevmode\endgraf} \ttverbatim \obeylines
+   \parskip=0pt \catcode`\|=\other \rightskip-5pc \ttfinish}
+{\catcode`\|=0 |catcode`|\=\other % | is temporary escape character
+  |obeylines % end of line is active
+  |gdef|ttfinish#1^^M#2\endtt{#1|vbox{#2}|endgroup}}
+
+\def\endverbatim{\egroup\endgroup}
+\catcode`\|=\active
+{\obeylines \gdef|{\leavevmode \ttverbatim \spaceskip=\ttglue %
+\relax\ifmmode \hbox\bgroup \let|=\endverbatim \else \let|=\endgroup\fi}}
+
+% \nodisplayskip is used with \begintt to avoid excess white space
+\def\nodisplayskip{\abovedisplayskip=0pt \belowdisplayskip=0pt
+   \abovedisplayshortskip=0pt \belowdisplayshortskip=0pt}
+
+% revised version of \dospecials (from plain.tex) to add | < >
+\def\dospecials{\do\ \do\\\do\{\do\}\do\$\do\&%
+\do\#\do\^\do\^^K\do\_\do\^^A\do\%\do\~\do\|\do\<\do\>}
+
+% double-column formatting; see TUGboat 6, 1 (Mar. 1985)
+%\let\plainoutput=\specialoutput
+\newdimen\pagewidth \pagewidth=\hsize
+\newdimen\pageheight \pageheight=\vsize
+\newdimen\colwidth \newdimen\bigcolheight
+\colwidth=.5\hsize \advance\colwidth by -1pc
+\bigcolheight=2\vsize \advance\bigcolheight by 1pc
+\newbox\partialpage
+\newdimen\savesize
+\def\begindoublecolumns{\begingroup
+  \savesize=\vsize
+  \output={\global\setbox\partialpage=\vbox{\unvbox255}}\eject
+  \output={\doublecolumnout}\hsize=\colwidth \vsize=\bigcolheight}
+\def\enddoublecolumns{\output={\balancecolumns}\eject
+  \global\output={\plainoutput}\global\vsize=\savesize
+  \endgroup \pagegoal=\vsize}
+
+\def\doublecolumnout{\dimen0=\pageheight
+  \advance\dimen0 by-\ht\partialpage
+  \advance\dimen0 by-\baselineskip
+  \dimen1=\dimen0
+  \ifvoid\topins\else \advance\dimen0 by-\ht\topins \fi
+  \ifvoid\footins\else \advance\dimen0 by-\ht\footins \fi
+  \splittopskip=\topskip \splitmaxdepth=\maxdepth
+  \vbadness=10000
+  \setbox0=\vbox{\ifvoid\topins\else\unvbox\topins\fi
+     \vsplit255 to\dimen0
+     \ifvoid\footins\else
+	\vskip\skip\footins\footnoterule\unvbox\footins\fi}
+  \setbox2=\vsplit255 to\dimen1
+  \onepageout\pagesofar
+  \global\vsize=\bigcolheight
+  \unvbox255 \penalty\outputpenalty}
+\def\onepageout#1{{\setbox255=\vbox{#1}
+  \hsize=\pagewidth \vsize=\pageheight \plainoutput}}
+\def\pagesofar{\unvbox\partialpage
+  \wd0=\hsize \wd2=\hsize \hbox to\pagewidth{\box0\hfil\box2}}
+\def\balancecolumns{\setbox0=\vbox{\unvbox255}\dimen0=\ht0
+  \advance\dimen0 by\topskip \advance\dimen0 by-\baselineskip
+  \divide\dimen0 by2 \splittopskip=\topskip
+  {\vbadness=10000 \loop \global\setbox3=\copy0
+    \global\setbox1=\vsplit3 to\dimen0
+    \ifdim\ht3>\dimen0 \global\advance\dimen0 by1pt \repeat}
+  \setbox0=\vbox to\dimen0{\unvbox1}
+  \setbox2=\vbox to\dimen0{\unvbox3}
+  \global\output={\balancingerror}
+  \pagesofar}
+\newhelp\balerrhelp{Please change the page into one that works.}
+\def\balancingerror{\errhelp=\balerrhelp
+  \errmessage{Page can't be balanced} {\hsize=\pagewidth \plainoutput}}
+
+% fix beginsection from plain tex
+\outer\def\beginsection#1\par{\filbreak\bigskip
+   \message{#1}\leftline{\bf#1}\nobreak\smallskip\vskip-\parskip\noindent}
+\catcode`@=12 % put @ back to normal character
+
+\let\macrosAreLoaded=\relax

@@ -1,0 +1,47 @@
+% letter macros; see Appendix E of the TeXBook
+
+\def\today{\ifcase\month\or
+  January\or February\or March\or April\or May\or June\or
+  July\or August\or September\or October\or November\or December\fi
+  \space\number\day, \number\year}
+\raggedbottom
+\interlinepenalty=1000
+\hsize=6.5truein
+\voffset=1truein % for princeton letterhead
+\parindent=0pt
+\parskip=0pt
+\nopagenumbers
+\headline={\ifnum\pageno>1
+  \tenrm To \addressee\hfil\today\hfil Page \folio
+  \else\hfil\fi}
+\def\beginlinemode{\endmode
+  \begingroup\obeylines\def\endmode{\par\endgroup}}
+\def\beginparmode{\endmode
+  \begingroup\parskip=\medskipamount \def\endmode{\par\endgroup}}
+\let\endmode=\par
+\def\endletter{\endmode\vfill\supereject}
+\newdimen\longindentation \longindentation=4truein
+\newbox\theaddress
+\def\address{\beginlinemode\getaddress}
+{\obeylines\gdef\getaddress #1
+  #2
+  {#1\gdef\addressee{#2}%
+    \global\setbox\theaddress=\vbox\bgroup\raggedright%
+    \hsize=\longindentation \everypar{\hangindent2em}#2
+    \def\endmode{\egroup\endgroup \copy\theaddress \bigskip}}}
+\def\body{\beginparmode}
+\def\closing{\beginlinemode\getclosing}
+{\obeylines\gdef\getclosing #1
+  #2
+  {#1\nobreak\bigskip\bigskip \leftskip=\longindentation #2
+    \nobreak\bigskip\bigskip\bigskip % space for signature
+    \def
+    {\endgraf\nobreak}}}
+\def\annotations{\beginlinemode\def\par{\endgraf\nobreak}\obeylines\par}
+\def\ps{\beginparmode\nobreak
+  \interlinepenalty5000\def\par{\endgraf\penalty5000}}
+
+\def\letterhead{\pageno=1 \def\addressee{}
+  {\leftskip=\longindentation\bigskip\today\par}\bigskip\bigskip}
+\def\makelabel{\endletter\copy\theaddress
+  \pageno=0\vfill\eject}
