@@ -1,0 +1,424 @@
+\documentstyle[fullpage]{article}
+\begin{document}
+
+\title{Intermediate Representation Trees}
+
+\author{Andrew W. Appel and David R. Hanson \\
+Department of Computer Science, Princeton University, \\
+Princeton, NJ 08544}
+
+\date{October 1991}
+
+\maketitle
+
+\section{Introduction}
+
+The sentences in this language are intermediate representation (IR) trees.
+A tree node has
+an operator that specifies its semantics and zero, one, or two children, which are
+other trees. A node also has several attributes.
+
+Trees are stored as records and pointers and
+are built using a set of tree-building interface functions.
+Trees are written in a functional notation, e.g.,
+\verb|PLUS(MEM(NAME),CONST)|.
+
+\section{Syntax}
+
+Figure~\ref{fig:syntax} gives the syntax IR trees.
+It is easy to confuse IR trees and parse or abstract syntax trees.
+The grammar given in Figure~\ref{fig:syntax} leads to parse trees,
+but these are not the same as IR trees.
+To minimize confusion, think of
+Figure~\ref{fig:syntax} as a grammar for expressions written in a functional notation.
+
+\begin{figure}[t]
+\begin{center}\tt
+\begin{tabular}{ll}
+\it stm\rm:	& SEQ(\it stm, stm\tt) \\
+\it stm\rm:	& LABEL \\
+\it stm\rm:	& JUMP(\it exp\tt) \\
+\it stm\rm:	& CJUMP(\it test, exp\tt) \\
+\it stm\rm:	& \it exp \\[1ex]
+
+\it exp\rm:	& \it binop\/\tt(\it exp, exp\tt) \\
+\it exp\rm:	& \it unop\/\tt(\it exp\tt) \\
+\it exp\rm:	& \it cvtop\/\tt(\it exp\tt) \\
+\it exp\rm:	& MEM(\it exp\tt) \\
+\it exp\rm:	& MOVE(MEM(\it exp\tt)\it, exp\tt) \\
+\it exp\rm:	& MOVE(TEMP\it, exp\tt) \\
+\it exp\rm:	& ESEQ(\it stm, exp\tt) \\
+\it exp\rm:	& NAME \\
+\it exp\rm:	& CONST \\
+\it exp\rm:	& CONSTF \\
+\it exp\rm:	& ALLOC(TEMP\it, exp\tt) \\
+\it exp\rm:	& TEMP \\
+\it exp\rm:	& CALL(\it args, exp\tt) \\[1ex]
+
+\it test\rm:	& \it relop\/\tt(\it exp, exp\tt) \\[1ex]
+
+\it args\rm:	& ARG(\it exp, args\tt) \\
+\it args\rm:	& NOARGS \\[1ex]
+
+\it binop\rm:	& FPLUS  FMINUS  FMUL  FDIV \\
+\it binop\rm:	& PLUS   MINUS   MUL   DIV  MOD  AND  OR  LSHIFT  RSHIFT  XOR \\[1ex]
+
+\it relop\rm:	& EQ   NE   LT   LE   GT   GE \\
+\it relop\rm:	& ULT  ULE  UGT  UGE \\
+\it relop\rm:	& FEQ  FNE  FLT  FLE  FGT  FGE \\[1ex]
+
+\it unop\rm:	& NEG    COMP   FNEG \\
+\it cvtop\rm:	& CVTSU  CVTSS  CVTSF  CVTUU  CVTUS  CVTFS  CVTFF \\
+\end{tabular}
+\end{center}
+\caption{Syntax of IR trees\label{fig:syntax}}
+\end{figure}
+
+
+\section{Attributes}\label{sec:attributes}
+
+A node may have one or more attributes, depending on
+the terminal or nonterminal symbol in Figure~1 to which it corresponds.
+The attributes are stored in fields by the same names.
+\begin{center}
+\begin{tabular}{lll}
+\sl Grammar \\
+\sl Symbol	& \sl Attribute	& \sl Meaning \\ \hline
+\it exp		& \tt size	& the number of bytes needed to hold the expression value \\
+\it args	& \tt size	& the number of bytes needed to hold the arguments \\
+\tt LABEL	& \tt label	& an assembly-language label of this point in the program \\
+\tt TEMP	& \tt temp	& a descriptor for a register \\
+\tt NAME	& \tt label	& an assembly-language label \\
+\tt CONST	& \tt ivalue	& the integer value of this node \\
+\tt CONSTF	& \tt fvalue	& the floating-point value of this node \\
+\end{tabular}
+\end{center}
+Some nodes have more than one attribute. For example, a \verb|CONST|
+node is also an {\it exp}, so it has both an \verb|ivalue| and a \verb|size|.
+
+\section{Node Semantics}
+
+Each production in the grammar derives nodes with particular meanings.
+The productions are repeated below with a description of
+the associated semantics and of the interface function that builds the
+corresponding node. For example, the C fragment
+\begin{verbatim}
+double x, max;
+if (x > max) max = x;
+\end{verbatim}
+might be represented by the tree built by
+\begin{verbatim}
+Label lab = newLabel();
+Tree t = tSEQ(
+        tCJUMP(tREL(oFLE, tMEM(8, tNAME(addressSize, "x")),
+                          tMEM(8, tNAME(addressSize, "max"))),
+               tNAME(addressSize, lab)), tSEQ(
+        tMOVE(tMEM(8, tNAME(addressSize, "max")),
+              tMEM(8, tNAME(addressSize, "x"))),
+        tLABEL(lab) ));
+\end{verbatim}
+\verb|Label and |\verb|newLabel| are described in Sec.~\ref{sec:layout} and the tree-building
+functions like \verb|tSEQ|, etc.\ are described in the subsections below.
+The descriptions below indicate what kind of trees
+can be passed to the interface functions;
+the functions use assertions to check the legality of their arguments.
+\verb|addressSize| denotes the size of an address on the target
+computer, e.g., \verb|4| on the SPARC.
+
+\newenvironment{production}{\begin{trivlist}\parindent=0pt\parskip=1ex\item[]{}}%
+{\end{trivlist}}
+\newcommand\entry[2]{\mbox{\makebox[2in][l]{\it #1}\tt #2}}
+
+\subsection{Statements}
+
+\begin{production}
+\entry{stm\rm: \tt SEQ(\it stm, stm\tt)}{Tree tSEQ(Tree stm1, Tree stm2)}
+
+A statement can be a sequence of statements; the first
+is executed followed by the the second (unless, of course, the first
+executes \verb|JUMP|). If \verb|stm1| (resp.\ \verb|stm2|)
+is \verb|NULL|, \verb|tSEQ| returns \verb|stm2| (resp.\ \verb|stm1|).
+It is an error for both \verb|stm1| and \verb|stm2| to be \verb|NULL|.
+
+\entry{stm\rm: \tt LABEL}{Tree tLABEL(Label label)}
+
+A statement may be a \verb|LABEL|, which
+serves as the target of jump instructions, etc.
+
+\entry{stm\rm: \tt JUMP(\it exp\tt)}{Tree tJUMP(Tree exp)}
+
+A statement may \verb|JUMP| to any address.
+The address may be computed as an expression.
+Jumping to a fixed label is written abstractly
+as \verb|JUMP(NAME)| and concretely as \verb|tJUMP(tNAME(addressSize,label))|.
+
+\entry{stm\rm: \tt CJUMP(\it test, exp\tt)}{Tree tCJUMP(Tree test, Tree exp)}
+
+A statement may be a conditional jump to any address.
+If the test evaluates to ``true'' at runtime, the jump is taken.
+The address may be computed as an expression.
+
+\entry{stm\rm: \it exp}{}
+
+A statement may be an expression. At runtime, the expression is
+evaluated (for possible side-effects), and the result is discarded.
+There is no tree-building function to build such a statement;
+the expression is simply used as a statement.
+\end{production}
+
+\subsection{Expressions}
+
+\begin{production}
+\entry{exp\rm: \it binop\/\tt(\it exp, exp\tt)}{Tree tOP(int size, Opcode binop, Tree exp1, Tree exp2)}
+
+An expression may be the sum of two expressions, etc.
+{\it binop\/} specifies the binary operator.
+For example, \verb|PLUS(exp1,exp2)| represents
+the sum of the two expressions \verb|exp1| and \verb|exp2|.
+\verb|size| is the number of bytes in the operands and in the result.
+\verb|tOP(4,oPLUS,exp1,exp2)| builds the node for this expression (assuming
+the expression deals in 4-byte integers).
+The operators, \verb|oPLUS|, etc., are defined by an enumeration.
+It is an error for \verb|size| to differ from the \verb|size|
+attributes of \verb|exp1| and \verb|exp2|.
+
+\entry{exp\rm: \it unop\/\tt(\it exp\tt)}{Tree tUNOP(int size, Opcode unop, Tree exp)}
+
+Unary operators are like binary operators, except there is only one child.
+Thus, a node for \verb|-3| (as a 2-byte integer) is created by
+\verb|tUNOP(2,oNEG,tCONST(2,3))|.
+It is an error for \verb|size| to differ from the \verb|size| attribute of \verb|exp|.
+
+\entry{exp\rm: \it cvtop\/\tt(\it exp\tt)}{Tree tCONVERT(int size, Opcode cvtop, Tree exp)}
+
+Type-conversions serve two purposes:
+To convert from one machine data type
+(signed integer, unsigned integer, floating) to another, and to convert from
+one precision (\verb|size|) to another.
+These are unusual operators
+in that the child's \verb|size| may differ from the parent's.
+The distinction between long integer, short integer, and character
+is not a difference of machine data type, but simply of size.
+The same holds for single- and double-precision floating point.
+For example, \verb|tCONVERT(4,oCVTSS,x)| converts from a short integer
+to a long integer and returns the tree \verb|CVTSS(x)|.
+
+\entry{exp\rm: \tt MEM(\it exp\tt)}{Tree tMEM(int size, Tree exp)}
+
+An expression may be the result of fetching from an address in memory.
+The child represents the address and must have a \verb|size| equal
+to \verb|addressSize|.
+The \verb|size| of the \verb|MEM| node indicates the amount of data
+to be fetched, starting at that address in memory.
+\verb|size| may be any number representable as an address.
+
+\entry{exp\rm: \tt MOVE(MEM(\it exp\tt)\it, exp\tt)}{Tree tMOVE(Tree exp1, Tree exp2)}
+
+An expression may be stored at an address in memory.
+\verb|exp1| is the address and, for this production,
+must be created by \verb|tMEM(size, exp)|; \verb|exp2| is the value.
+The number of bytes stored is the \verb|size| of the \verb|MOVE| node and
+is equal to the \verb|size| of \verb|exp1| node,
+which must equal the \verb|size| of \verb|exp2|.
+The \verb|MOVE| node is an expression; the value is that of \verb|exp2|.
+\verb|size| may be any number representable as an address.
+There is, however, little that can be done
+with expressions of large size other than to fetch and store them.
+For example,
+\begin{verbatim}
+tMOVE(tMEM(1000,tNAME(addressSize,"x")),tMEM(1000,tNAME(addressSize,"x")))
+\end{verbatim}
+is a block move; it moves 1000 bytes from \verb|x| to \verb|y|.
+
+\entry{exp\rm: \tt MOVE(TEMP\it, exp\tt)}{Tree tMOVE(Tree exp1, Tree exp2)}
+
+\verb|MOVE| can also move a value into a register.
+In this case, \verb|exp1| is a tree returned by \verb|tTEMP| (see below).
+\verb|exp2| is copied into the register, and the result and \verb|size|
+are that of \verb|exp2|.
+The \verb|size| of \verb|exp2| must equal that of the register.
+
+\entry{exp\rm: \tt ESEQ(\it stm, exp\tt)}{Tree tESEQ(Tree stm, Tree exp)}
+
+This node is like the comma operator in C.
+\verb|stm| is evaluated, then \verb|exp| is evaluated.
+The result and \verb|size| of the \verb|ESEQ| node are that of \verb|exp|.
+This is one of the few expressions where order of
+evaluation of the children is guaranteed.
+
+\entry{exp\rm: \tt NAME}{Tree tNAME(int size, Label label)}
+
+This kind of expression yields the value associated with the label.
+Such a value is typically an address, so \verb|size| is usually \verb|addressSize|.
+However, the {\sc Unix} assembler and loader can treat 1-, 2-, or 4-byte
+quantities as labels.
+\verb|label| is a character string that labels the value, which becomes
+the value of the \verb|label| attribute.
+
+\entry{exp\rm: \tt CONST}{Tree tCONST(int size, int val)}
+
+An integer constant. \verb|size| must be 1, 2, or 4.
+The result of the expression is the integer constant \verb|val|.
+
+\entry{exp\rm: \tt CONSTF}{Tree tCONSTF(int size, double val)}
+
+A floating constant. \verb|size| must be 4 or 8.
+The result of the expression is the floating constant \verb|val|.
+
+\entry{exp\rm: \tt ALLOC(TEMP\it, exp\tt)}{Tree tALLOC(Temp temp, Tree exp)}
+
+A register \verb|temp| is allocated, \verb|exp| is evaluated
+and its value is saved; the temporary variable is then discarded.
+The result is the result of \verb|exp|.
+There should be no references to \verb|temp| outside of \verb|exp|.
+
+\entry{exp\rm: \tt TEMP}{Tree tTEMP(Temp temp)}
+
+The value of the register \verb|temp| is used.
+The \verb|size| of the expression
+is the \verb|size| associated with the register.
+\verb|temp| may have been allocated with \verb|tALLOC|,
+or may have been allocated in some other way.
+
+\entry{exp\rm: \tt CALL(\it args, exp\tt)}{Tree tCALL(int size, Tree args, Tree exp)}
+
+A function is called with arguments.
+The argument list \verb|args| is evaluated;
+these are passed to the function, whose address is given by \verb|exp|.
+The function returns a result of size \verb|size|, and this result is the result
+of the \verb|CALL| expression.
+The arguments may be evaluated left-to-right, or right-to-left, or in some
+other order. All arguments are passed by value; other transmission mechanisms
+can be implemented by synthesizing the appropriate trees.
+\end{production}
+
+\subsection{Testing}
+
+\begin{production}
+\entry{test\rm: \it relop\/\tt(\it exp, exp\tt)}{Tree tREL(Opcode relop, Tree exp1, Tree exp2)}
+
+A boolean test value is created from the comparison of two expressions
+of equal size.
+\end{production}
+
+\subsection{Arguments}
+
+\begin{production}
+\entry{args\rm: \tt ARG(\it exp, args\tt)}{Tree tARG(Tree exp, Tree args)}
+
+\verb|tARG| constructs one element of an argument list, with two fields:
+``this element'' (\verb|exp|), and ``rest-of-list'' (\verb|args|).
+An {\it args\/} node has a \verb|size| field, which
+is computed as the sum of the \verb|size|s of \verb|exp| and \verb|args|.
+
+\entry{args\rm: \tt NOARGS}{Tree tNOARGS(void)}
+
+This is an empty argument list or the ``end'' of an argument list.
+The \verb|size| is 0.
+\end{production}
+
+\subsection{Operators}
+
+\begin{production}
+\entry{binop\rm: \tt FPLUS FMINUS FMUL FDIV}{}
+
+These are the floating point arithmetic operators,
+in both single- or double-precision.
+They are specified to \verb|tOP| as \verb|oFPLUS|, \verb|oMINUS|, etc.
+
+\entry{binop\rm: \tt PLUS MINUS MUL DIV MOD AND OR LSHIFT RSHIFT XOR}{}
+
+These are the integer arithmetic operators, which operate on 1-, 2-, or
+4-byte integers. They are specified to \verb|tOP| as \verb|oPLUS|, \verb|oMINUS|, etc. 
+
+\entry{relop\rm: \tt EQ NE LT LE GT GE}{}
+
+These are the signed-integer comparison operators, which operate on 1-, 2-, or
+4-byte integers. They are specified to \verb|tREL| as \verb|oEQ|, \verb|oNE|, etc. 
+
+\entry{relop\rm: \tt ULT ULE UGT UGE}{}
+
+These are the unsigned-integer comparison operators.
+They are specified to \verb|tREL| as \verb|oULT|, \verb|oULE|, etc.
+Equality and inequality
+of unsigned integers are tested with \verb|EQ| and \verb|NE|, just as for signed integers.
+ 
+\entry{relop\rm: \tt FEQ FNE FLT FLE FGT FGE}{}
+
+These are the floating-point comparison operators, which operate on single-
+or double-precision numbers.
+Both arguments must be of the same precision.
+They are specified to \verb|tREL| as \verb|oFEQ|, \verb|oFNE|, etc. 
+
+\entry{unop\rm: \tt NEG COMP FNEG}{}
+
+These are the unary operators, specified to \verb|tUNOP| as \verb|oNEG|, \verb|oCOMP|,
+and \verb|oFNEG|. They specify integer negation, integer complement,
+and floating negation, respectively.
+
+\entry{cvtop\rm: \tt CVTSU CVTSS CVTSF CVTUU CVTUS CVTFS CVTFF}{}
+
+These are the conversion operators, which are applied with
+\verb|tCONVERT|. They are specified as \verb|oCVTSU|, \verb|oCVTSS|, etc. 
+These operators convert between the three types ``signed-integer'',
+``unsigned-integer,'' and ``floating-point.''
+Thus, for example, \verb|CVTSU| converts from signed to unsigned integers.
+These are among the only operators that take arguments whose
+\verb|size| is different from their result. Thus, \verb|CVTSU| converts
+from a 1-byte signed integer to a 4-byte unsigned integer, or from
+a 2-byte unsigned integer to a 1-byte signed integer, etc.
+When converting from a longer integer to a shorter one,
+the value might not fit.
+The result of the conversion in this and similar cases is undefined.
+\end{production}
+
+\section{Node Layout}\label{sec:layout} 
+
+Trees are implemented with C \verb|struct|s pointing to other \verb|struct|s.
+The relevant declaration is
+\begin{verbatim}
+typedef struct tree *Tree;
+struct tree {
+        Opcode op;
+        int size;
+        union {
+                Tree child[2];
+                Label label;
+                int ivalue;
+                double fvalue;
+                Temp temp;
+        } u;
+        ...
+};
+\end{verbatim}
+The fields \verb|size|, \verb|u.label|, \verb|u.ivalue|, \verb|u.fvalue|,
+and \verb|u.temp| correspond to the similarly named attributes
+described in Sec.~\ref{sec:attributes}.
+The \verb|u.child| vector points at the node's children; unused entries
+are set to \verb|NULL|.
+The \verb|op| field identifies nodes with children.
+
+Other relevant declarations are as follows.
+\begin{verbatim}
+typedef char *Label;
+
+typedef struct temp {
+        int number;
+        int size;
+} *Temp;
+
+Label   newLabel(void);
+Temp    newTemp(int size);
+void    freeTree(Tree t), printTree(Tree t, FILE *fp);
+\end{verbatim}
+New \verb|Label|s are generated by \verb|newLabel|; labels
+have the form \verb|L|$n$ for $n = 1, \dots$
+New \verb|Temp|s are allocated by \verb|newTemp|;
+\verb|size| is the size of the temporary in bytes.
+\verb|freeTree| frees the storage occupied by \verb|t| and its descendants
+(but not the storage for \verb|Label|s and \verb|Temp|s they reference), and
+\verb|printTree| prints a character representation
+of the tree \verb|t| on file \verb|fp|, or \verb|stderr| if \verb|fp| is \verb|0|.
+This default is useful for calling \verb|printTree| from within a debugger.
+
+\end{document}
