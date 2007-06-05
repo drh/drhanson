@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>Detecting Memory Usage Errors and Leaks</title>
+</head>
+<body>
+<h2>Detecting Memory Usage Errors and Leaks</h2>
+
+<p>Memory usage errors are so common in C programs that special tools,
+like purify, are available to help detect these kinds of errors. Three common errors are:
+<ol>
+<li>freeing or reallocing memory that wasn&rsquo;t allocated by malloc, realloc, or calloc;</li>
+<li>freeing or reallocing free memory; and</li>
+<li>failing to free memory.</li>
+</ol>
+</p>
+
+<p>These versions of malloc, calloc, realloc, and free collaborate to detect the usage errors
+listed above and to report potential leaks, i.e., allocated memory that isn&rsquo;t freed.
+These functions are packaged in the library libmalloc.a.</p>
+
+<p>These special versions of the allocation functions manage storage
+as detailed in their specifications (see page 252 in K&amp;R and the man page for malloc),
+and they write messages about their actions to memmon.
+The program memmon analyzes these messages and prints warnings about illegal usage and about leaks.
+For example, the program below, bug2.c, has 3 usage errors and 1 leak.</p>
+<pre>void *f(int i) { return i > 0 ? f(i - 1) : malloc(10); }
+main() {
+        void *p = f(3);
+        double d;
+                
+        free(p);
+        free(p);
+        free(0);
+        free((void*)1);
+        free(&d);
+        f(2);
+}
+</pre>
+<p>The call to free at line 7 frees memory that has already been freed,
+the calls to free at lines 9 and 10 pass pointers that were not returned by malloc.
+The call to f in line 11 creates a leak.
+When bug2.c is compiled, loaded with libmalloc.a, and run, memmon reports these errors:</p>
+
+<pre>% cc bug2.c libmalloc.a
+% ./a.out
+memmon $Revision: 4 $
+Options: a.out=a.out -inuse-at-exit=yes -show-all-calls=no -log-file=stderr -temp-file=/usr/tmp/aaaa03384
+
+** free'ing free memory
+   free(0x1009000) called from:
+        main             [pc=0x1774]
+   This block is 10 bytes long and was malloc'd from:
+        f                [pc=0x1741]
+        f                [pc=0x1730]
+        f                [pc=0x1730]
+        f                [pc=0x1730]
+        main             [pc=0x175b]
+
+** free'ing unallocated memory
+   free(0x1) called from:
+        main             [pc=0x178c]
+
+** free'ing unallocated memory
+   free(0xbffff280) called from:
+        main             [pc=0x1797]
+
+** Memory in use at 0x1008ff0
+   This block is 10 bytes long and was malloc'd from:
+        f                [pc=0x1741]
+        f                [pc=0x1730]
+        f                [pc=0x1730]
+        main             [pc=0x17a3]
+</pre>
+<p>memmon&rsquo;s diagnostics include the top portion of the call stack
+at the point the error occurred.
+For some errors, the call stack at the point of allocation is also printed.</p>
+
+<p>Several other test cases are available in bug?.c.</p>
+
+<h3>Implementation Details</h3>
+
+<p>Each call to malloc, calloc, realloc, and free causes a message to be written to memmon.
+The format of these binary messages is described in
+<a href="memmon.h">memmon.h</a> and in the memmon man page.</p>
+
+<p>The first message causes a pipe to be created between the current process and a new process running memmon.
+The system calls pipe creates the pipe, fork creates a new process,
+and execl runs memmon in the new process; close and dup2 rearrange the file descriptors so that the messages are written to memmon&rsquo;s standard input.
+write writes the messages.</p>
+
+<p>Each message includes the top 10 return addresses in the call stack that led to the call.
+If there are fewer than 10 return addresses, 0s are passed for the missing ones.</p>
+The return addresses are found by traversing the stack.
+Given an appropriate starting point (e.g., the current value of the frame point)
+this traversal can be written entirely in C.
+The &ldquo;bottom&rdquo; frame is the one with a 0 return address and a 0 frame pointer.
+Also, the second-to-bottom frame is for the C start-up code that calls main;
+these bottom two frames are not included in memmon messages.</p>
+
+<p>memmon detects errors in the use of the allocation functions, and it prints diagnostics like those shown above.
+The implementations of the allocation functions are robust&mdash;they do not fail when used incorrectly.
+For example, free copes with the errors illustrated in bug2.c above.
+So, the allocation functions detect the same errors that memmon does and take evasive action,
+which usually means ignoring the offending calls.
+They must also cope gracefully with other error conditions, like errors in launching memmon.<p>
+<hr>
+<address>&mdash;David R. Hanson; drh at drhanson dot net; Fall 1994.</address>
+</body>
+</html>

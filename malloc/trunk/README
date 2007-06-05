@@ -1,0 +1,35 @@
+This directory contains versions of malloc, calloc, realloc, and free
+that detect usage errors. This package was part of an assignment in the
+Fall 1994 offering of Princeton's COS 217, Introduction to Systems
+Programming.
+
+The important files are
+
+index.html
+Explains the semantics of the allocation functions and their interaction with 
+memmon, the program that actually detects the errors and prints the diagnostics.
+
+memmon.1
+a man page for memmon; it explains the format of the messages sent from
+the allocation functions to memmon.
+
+This version of the library and of memmon run on the SPARC (Unix) and Intel 
+(Linux, OS X 10.4.9).
+
+Installation involves 2 files: build memmon first with the commands
+
+	make memmon
+	mv memmon /usr/local/lib/memmon
+	cp memmon.1 /usr/local/man/man1
+
+where "/usr/local/lib/memmon" is the local path for memmon. Then build
+and install libmalloc.a:
+
+	make CFLAGS='-g -DMEMMON="/usr/local/lib/memmon"' libmalloc.a
+	mv libmalloc.a /usr/local/lib
+	ranlib /usr/local/lib/libmalloc.a
+
+where the value assigned to MEMMON is the same path you used above to
+install memmon.
+
+Send email about problems/bugs to drh at drhanson dot net.

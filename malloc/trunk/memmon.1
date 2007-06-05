@@ -1,0 +1,157 @@
+.TH MEMMON 1 "local - 9/21/94"
+.SH NAME
+memmon - detect allocation errors
+.SH SYNOPSIS
+.B memmon
+[
+.I option
+]...
+.SH DESCRIPTION
+.I memmon
+helps detect illegal uses of the standard allocation functions
+.IR malloc ,
+.IR calloc ,
+.IR realloc ,
+and
+.IR free .
+.I memmon
+reads allocation messages from the standard input that describe
+the calls to these functions made by a program
+and prints, on the standard error, illegal uses.
+.PP
+It detects calls to
+.I free
+or to
+.I realloc
+that attempt to free memory that wasn't allocated
+by a previous call to
+.IR malloc ,
+.IR calloc ,
+or
+.IR realloc ;
+and calls to
+.I free
+or to
+.I realloc
+that attempt to free memory that is already free.
+When after reading its input,
+.I memmon
+can also lists the memory that is still allocated, which helps
+detect storage leaks; that is, memory that should have been
+freed, but that is still allocated.
+.PP
+.I memmon
+accepts the following options. It reads its program arguments first,
+then it reads options from the environment variable
+.IR MEMMONOPTIONS .
+.TP
+.B \-show-all-calls[=yes|=no]
+Prints a message describing
+.I every
+call to one of the allocation functions when
+.B yes
+is specified or when there is no value.
+The default is
+.BR \-show-all-calls=no .
+.TP
+.BR \-inuse-at-exit[=yes|=no]
+Prints the memory that is still allocated at program
+termination when
+.B yes
+is specified or when there is no value.
+The default is
+.BR \-inuse-at-exit=yes .
+.TP
+.BR \-a.out= \fIfile\fP
+Specifies that
+.I file
+is the program whose execution is described by the input messages.
+The default is
+.BR \-a.out=a.out .
+.TP
+.BR \-log-file= \fIfile\fP
+Write the diagnostic output to
+.I file
+instead of to the standard error, which is the default.
+.TP
+.BR \-temp-file= \fIfile\fP
+Write the
+.B a.out
+symbol table to
+.I file
+instead of to a temporary file, which is the default.
+.PP
+.I memmon
+reads binary messages whose format is defined by
+.PP
+.ta 8 16 24 32 40 48 56 64
+.ft B
+.nf
+#define T Memmon_T
+typedef struct T {	/* memmon messages: */
+	enum {
+		Memmon_free,
+		Memmon_malloc,
+		Memmon_calloc,
+		Memmon_realloc
+	} opcode;		/* allocation function code */
+	void *ptr[2];		/* input address, output address */
+	unsigned size[2];	/* input sizes in bytes */
+	void *calls[10];	/* associated call stack */
+} T;
+.fi
+.PP
+The
+.I opcode
+field identifies the function.
+For all functions, the
+.I calls
+field holds up to 10 return address from the point
+of call to the allocation function.
+.PP
+For
+.IR Memmon_free ,
+.I ptr[0]
+gives the argument to
+.IR free .
+.PP
+For
+.IR Memmon_malloc ,
+.I size[0]
+gives the value of the argument to
+.IR malloc ,
+and
+.I ptr[1]
+gives the value returned.
+.PP
+For
+.IR Memmon_calloc ,
+.I size[0]
+and
+.I size[1]
+gives the values of the second argument and first arguments,
+respectively (note the order), and
+.I ptr[1]
+gives the value returned.
+.PP
+For
+.IR Memmon_realloc ,
+.I ptr[0]
+and
+.I size[0]
+gives the values of the arguments to
+.BR realloc , and
+.I ptr[1]
+gives the value returned.
+.SH FILES
+.PP
+.RS
+.ta \w'/usr/tmp/aadddddd---'u
+.nf
+a.out	program file
+/usr/tmp/aa?	temporary file
+.fi
+.RE
+.PP
+.SH "SEE ALSO"
+.IR purify (1)
