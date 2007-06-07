@@ -1,0 +1,5 @@
+procedure rpoints(p)
+	if (type(p) == "procedure")
+		for (i in p)
+			write(i, ":\t", p[i], "\n")
+end

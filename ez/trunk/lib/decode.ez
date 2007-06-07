@@ -1,0 +1,17 @@
+procedure decode(cmd, keymap)
+	local c, s, t
+
+	s = ""
+	t = keymap
+	while (c = cmd[1!1]) {
+		s = s || c
+		cmd = cmd[2:0]
+		if (type(t[c]) == "procedure") {
+			t[c](s)
+			return (1)
+			}
+		else if (type(t[c]) ~= "table")
+			return
+		t = t[c]
+		}
+end

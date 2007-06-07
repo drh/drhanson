@@ -1,0 +1,8 @@
+s = 0
+p = 12621
+c = 21131
+m = 100000
+procedure random(n)
+	s = (s*p + c)%m
+	return (s*n/m + 1)
+end

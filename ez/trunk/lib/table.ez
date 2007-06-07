@@ -1,0 +1,53 @@
+procedure edappd(n, new)
+   ctable[new] = ""
+   while (n > size(carray))
+      carray[size(carray)+1] = ""
+   carray = carray[1:n+1] || table(new) || carray[n+1:size(carray)+1]
+end
+
+procedure edchng(n, new) local old
+   if (n > size(carray))
+      edappd(n-1, new)
+   else {
+      old = carray[n]
+      ctable[new] = ctable[old]
+      if (old ~= new)
+         remove(ctable, old)
+      carray[n] = new
+      }
+end
+
+procedure eddel(n)
+   remove(ctable, carray[n])
+   carray = carray[1:n] || carray[n+1:size(carray)+1]
+end
+
+procedure edesc(n) local sarray, stable
+   sarray = carray
+   stable = ctable
+   ctable[carray[n]] = edit(ctable[carray[n]])
+   carray = sarray
+   ctable = stable
+end
+
+procedure edgetl(n)
+   return (carray[n])
+end
+
+procedure edinit(v) local i, k
+   if (v) {
+      ctable = v
+      i = 0
+      carray = table() 
+      for (k in ctable)
+         carray[i=i+1] = k
+      }
+end
+
+procedure edlast()
+   return (size(carray))
+end
+
+procedure edquit()
+   return (ctable)
+end

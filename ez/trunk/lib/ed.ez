@@ -1,0 +1,8 @@
+procedure ed(s)
+	if (s = string(s)) {
+		system("echo >/tmp/ezTmp '"||s||"'; ed /tmp/ezTmp");
+		s = read("/tmp/ezTmp")
+		system("rm /tmp/ezTmp")
+		return (s)
+		}
+end

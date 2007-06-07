@@ -1,0 +1,317 @@
+From cwf Sat Dec  3 14:49:53 1983
+To: drh
+
+Joining the if and else lines below causes an error.
+
+procedure ls(x) 
+   local i
+   if (x) for (i in x) write(i, "\n") 
+   else ls(root) 
+end
+
+From cwf Sat Dec  3 14:59:37 1983
+To: drh
+Subject: cache
+
+i'm still getting cache overflows, even with this afternoon's new putblk.
+sadly, it takes too long to have an easily reproducible sequence.
+
+From cwf Sat Dec  3 15:19:12 1983
+To: drh
+Subject: ez comparison bugs
+
+shouldn't both of the statements
+   if(2 >= 1 & 2 <= 3) x = 4
+   if(1 <= 2 <= 3) x = 4
+change x?  neither does.
+
+From cwf Sat Dec  3 15:34:01 1983
+To: drh
+Subject: ez substr bug
+
+it looks like the ":" and "!" have stopped working.
+at the top level, ascii[66!1] and ascii[66:67] print nothing,
+and find(ascii[8!1],ascii) gives a compile error.
+
+From cwf Sat Dec  3 15:51:52 1983
+To: drh
+Subject: ez root bug
+
+at the top level, both the lines below
+   root[1]
+   root[1] = 2
+give error 101, numeric expected, offending value "system".
+maybe they're a little wierd, but shouldn't they work?
+
+From cwf Sat Dec  3 16:18:48 1983
+To: drh
+Subject: ez system builtin
+
+we may wish to leave system's stdin and stdout as is.
+if we're not careful, we could end up with system("ed")'s i/o
+redirected in such a way as to be useless.
+more thought (ie, some thought) needed here.
+
+From john Sat Dec  3 20:59:54 1983
+To: drh
+Subject: ez
+
+sorry to tell you this...substrings do not work now. ie
+
+x = "abcdefghijklm"
+write(x[1:5])
+
+produces :
+error 106, procedure expected
+offending value: void
+
+From cwf Mon Dec  5 10:14:50 1983
+To: drh
+Subject: ez system error
+Cc: john
+
+the following sequence gives system error 1005 in interp: illegal operator
+
+   rm ez.sys; ez
+   read("list.ez")()
+   type(keymap)
+
+the error doesn't show up if the last line is omitted.
+list.ez is in ~cwf/ez/ed.
+
+From cwf Mon Dec  5 10:35:53 1983
+To: drh
+Subject: "for" unrecognized
+Cc: john
+
+ez does not recognize "for(;;)".
+that's not so bad, but after the error, input is ignored until a DEL.
+
+From cwf Mon Dec  5 11:02:10 1983
+To: drh
+Subject: sort bug
+Cc: john
+
+pipe the following text into ez, and it works.
+remove the # on the break stmt, and it says "missing }"
+
+kludge = 0
+
+procedure sort(a)
+   return (qsort(a, 1, size(a)))
+end
+
+procedure qsort(a, l, r) 
+   local v, t, i, j
+
+   if (r > l) {
+      v = a[r]
+      i = l - 1
+      j = r
+      for (;;) {
+         while (a[i=i+1] < v) ;
+         while (a[j=j-1] > v) ;
+         t = a[i]; a[i] = a[j]; a[j] = t
+	 # if (j <= i) break
+         }
+      qsort(l,i-1)
+      qsort(i+1,r)
+      }
+   return (a)
+end
+
+From cwf Tue Dec  6 13:13:57 1983
+To: drh
+Subject: subtable bug
+Cc: john
+
+t[1!2] picks up t[3] in addition to t[1] and t[2]
+
+From cwf Tue Dec  6 16:05:33 1983
+To: drh
+Subject: putblk bug
+Cc: john
+
+the sequence below gets a negative ref count out of putblk.
+
+   rm ez.sys; ez
+   read("lib.ez")()
+   load("list")
+   vi()
+   ZZ			(to exit vi)
+   edit(test)
+   il 			(my "insert lines" command)
+
+dumping the vi call seems to make the problem disappear.
+
+From cwf Tue Dec  6 16:15:40 1983
+To: drh
+Subject: multiple assignments "bug"
+Cc: john
+
+the multiple assignment "bug" may be a "feature".
+try the following sequence:
+   t[1]=t[2]="abcdef"
+   t[1][1:3]=t[2][5:7]=""
+it sets t[2] to "abcd" (as it should) and t[1] to "abcdcdef".
+ie, it replaces t[1][1:3] with ALL OF t2, not t2[5:7].
+
+i've noticed this at the top level as well:
+when assigning to a substring, ez prints the WHOLE string, not the substring.
+this looks like it might have been deliberate.  was it?  if so, why?  
+if not, i'm for fixing it to return the substring, not the whole string.
+
+From cwf Wed Dec  7 13:13:36 1983
+To: drh
+Subject: cache overflow
+Cc: john
+
+starting with a new ez.sys, the following stmt alone gives a cache overflow:
+
+   for(i=1;i<=10;i=i+1) copy(root)
+
+From cwf Sat Dec 10 13:48:49 1983
+To: drh
+Subject: cache overflow
+
+i finally have a repeatable version of the cache overflow bug in replace:
+
+   read("lib.ez")()
+   load("edit")
+   load("array")
+   load("table")
+   load("table")
+
+shorter sub-sequences don't seem to work.
+
+From john Sat Dec 10 21:27:59 1983
+To: drh
+Subject: ez ??? alternation ???
+
+upto("y", "abc") | 0
+returns a 0 at the top level. but
+x = (upto("y", "abc") | 0)
+causes 'variable expected error'. can't i do this?
+
+From john Sun Dec 11 14:06:33 1983
+To: drh
+
+if (~(1 == 2)) write("yes")
+to ez gives
+system error 1004 in enode: undefined operator
+
+From john Mon Dec 12 20:09:41 1983
+To: drh
+Subject: ez bug
+
+# dave: the first if statement works: the second does not.
+
+procedure test()
+	local s
+
+	s = "abcdefg"
+	if ((1 == 1) & (1 == 2)) write("no\n") else write("yes\n")
+	if ((1 == 1) & (many("x", s))) write("no\n") else write("yes\n")
+	return
+end
+
+i think it is just the string functions not returning a VOID properly.
+
+From john Wed Dec 14 08:39:47 1983
+To: drh
+Subject: ez bug
+
+for (i in t) write(i, t[i]) 
+gives 'line1: variable expected'.
+
+From john Wed Dec 14 09:30:57 1983
+To: drh
+Subject: ez bugs
+
+string(t) where t is a table, 
+returns a string of all values of the table that are themselves
+strings already..ie if t[1]=1; string(t) returns null.
+
+From john Wed Dec 14 14:25:51 1983
+To: drh
+Subject: ez bug
+
+this is probably mine -- but since you moved all my code...
+t[1]="a"
+size(t)
+1
+t[1]="b"
+size(t)
+2
+
+From cwf Mon Dec 19 11:12:53 1983
+To: drh
+Subject: stack underflow
+
+i've tracked the stack underflow problem to this routine (in a fresh ez.sys),
+which returns the table named "array" if v's indices are 1,2,3,...
+and the table named "directory" otherwise.
+
+   procedure class(v) local i, j
+      j = 0
+      for (i in v)
+         if (~(integer(i) == (j=j+1))) 
+	    return (directory)
+      return (array)
+   end
+
+if i do array.name="array" and directory.name="directory",
+then class(table()) properly prints "array"
+but class(root) gets the stack underflow instead of printing "directory".
+
+From cwf Thu Dec 22 18:01:06 1983
+To: drh
+Subject: find bug
+
+this is the reminder you requested about the bug in ez's find code.
+btw, i took out the find call, and incremental search works, sorta.
+
+From cwf Thu Dec 22 18:02:13 1983
+To: drh
+Subject: match bug
+
+match("e", "ed") does not seem to return anything.
+shouldn't it return 2?
+am i going to be blamed for this one too?
+
+From john Sun Jan  8 01:52:59 1984
+To: drh
+Subject: another table bug
+
+# here is the table bug i told you about long ago.
+# i can recreate it now -- try typing foo() at ez:
+# the table catted onto t disappears!!! type of table doesn't matter.
+# but the direct change to t does stay! (t[5]=5). wierd.
+
+procedure foo()
+	local t
+
+	t[1]=1
+	baz(t)
+	write("in foo t is ", t, "\n")
+	return
+end
+
+procedure baz(t)
+
+	t[5]=5
+	t = t || ["where_is_this"]
+	write("in baz t is ", t, "\n")
+end
+
+From john Thu Jan 19 00:44:05 1984
+To: drh
+Subject: stack overflows
+
+- i can recreate stack overflows at will.  seems to be pure characters in
+  the file causing it...right at 16 blocks = 8192 characters.
+  any file over this size read in at one time produces void.
+  any file over this size read in and compiled at one time 
+  produces stack overflow. sample file in /usr/john/ez/ed/trial/out.ez.
+
+==================================================

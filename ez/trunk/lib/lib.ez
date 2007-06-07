@@ -1,0 +1,142 @@
+procedure cd(x) 
+   if (type(x) == "string")
+      root = root[x]
+   else if (type(x) == "table")
+      root = x
+   else 
+      cd("..")
+end
+
+procedure copy(t) local c, i
+   if (type(t) ~= "table") 
+      return (t)
+   else if (size(t) == 0)
+      return (table())
+   else {
+      for (i in t) 
+         c[i] = t[i]
+      return (c)
+      }
+end
+
+procedure dupl(s, n)
+   if (n <= 0) 
+      return ("") 
+   else if (n%2 == 0) 
+      return (dupl(s||s, n/2))
+   else 
+      return (s||dupl(s||s, n/2))
+end
+      
+procedure getfile(x) 
+   if (x) 
+      savefile = x
+   return (savefile) 
+end
+
+procedure itoc(n, b)
+   if (n < 0)
+      return ("-" || itoc(-n, b))
+   else if (n < b)
+      return (string(n%b))
+   else
+      return (itoc(n/b, b) || n%b)
+end
+   
+procedure load(x) 
+   read(getfile(x) || ".ez")() 
+end
+
+procedure ls(x) local i, s
+   if (type(x) == "string")
+      return (ls(root[x]))
+   if (~x) 
+      return (ls(root))
+   s = ""
+   for (i in x) 
+      s = s || string(i) || "\n"
+   return (s)
+end
+
+procedure max(x, y) 
+   if (x > y) 
+      return (x) 
+   else
+      return (y) 
+end
+
+procedure mkdir(s) 
+   root[s][".."] = root 
+end
+
+procedure min(x, y) 
+   if (x < y) 
+      return (x) 
+   else
+      return (y) 
+end
+
+procedure pad(s, l) 
+   return (s||dupl(" ",l-size(s))) 
+end
+
+procedure rm(x) 
+   remove(root, x) 
+end
+
+procedure qsort(a, l, r) local v, t, i, j
+   if (r > l) {
+      v = a[r]; i = l - 1; j = r
+      for (;;) {
+         while (a[i=i+1]<v) 
+	    ;
+         while (j>l & a[j=j-1]>v) 
+	    ;
+         t = a[i]; a[i] = a[j]; a[j] = t
+	 if (j <= i) 
+	    break
+         }
+      a[j] = a[i]; a[i] = a[r]; a[r] = t
+      qsort(a, l, i-1)
+      qsort(a, i+1, r)
+      }
+   return (a)
+end
+
+procedure reset() 
+   system("stty -raw echo")
+end
+
+procedure sort(a) 
+   return (qsort(copy(a), 1, size(a))) 
+end
+
+# stot - convert string to table
+procedure stot(s) local i, n, t
+   n = 0
+   t = table()
+   while (i = upto("\n", s)) {
+      t[n=n+1] = s[1:i]
+      s = s[i+1:0]
+      }
+   if (s ~= "")
+      t[n=n+1] = s
+   return (t)
+end
+
+# ttos - convert table to string
+procedure ttos(t) local i, s
+   s = ""
+   for (i in t)
+      s = s || string(t[i]) || "\n"
+   if (size(t) == 1)
+      return (s[1:-1])
+   else
+      return (s)
+end
+
+procedure vi(x) 
+   x = getfile(x)
+   system("vi "||x||".ez")
+   load(x) 
+end

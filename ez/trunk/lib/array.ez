@@ -1,0 +1,29 @@
+name = "array"
+
+carray = ""
+
+procedure edappd(n, new)
+   carray = carray[1:n+2] || carray[n+1:size(carray)+1]
+   carray[n+1] = new
+end
+
+procedure edchng(n, new)
+   carray[n] = new
+end
+
+procedure eddel(n)
+   carray = carray[1:n] || carray[n+1:size(carray)+1]
+end
+
+procedure edgetl(n)
+   return (carray[n])
+end
+
+procedure edinit(v)
+   if (v) 
+      carray = copy(v)
+end
+
+procedure edquit()
+   return (carray)
+end
