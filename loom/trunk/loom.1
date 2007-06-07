@@ -1,0 +1,103 @@
+.TH LOOM 1 "local \- 2/25/87"
+.SH NAME
+loom \- weave fragments together
+.SH SYNOPSIS
+.B loom
+[ file \(br option ]...
+.br
+.SH DESCRIPTION
+.PP
+.I loom
+copies the named files, or the standard input if no files are given,
+to the standard output replacing occurrences of lines of the form
+.IP ""
+%include
+.IR file \ [
+.IR section  \ ]\ [
+.IR cmd \ ]
+.PP
+by the fragment named
+.I section
+in file
+.IR file .
+If
+.I cmd
+is given, it is executed with the text of the specified fragment
+as its standard input, and the standard output replaces
+the %include line, i.e. the fragment is ``filtered'' through
+.IR cmd .
+.I cmd
+may be preceeded by a vertical bar (|).
+If
+.I section
+is omitted, the entire file is filtered through
+.IR cmd ,
+and
+.I cmd
+.I must
+be preceeded by a vertical bar.
+The section name \fB-\fP can also be used to refer to the entire file.
+.PP
+Fragments are identified by named sections of the form:
+.IP ""
+.nf
+/* include section */
+   ...body of fragment...
+/* end section */
+.fi
+.PP
+or by
+.IP ""
+.nf
+{include section}
+   ...body of fragment...
+{end section}
+.fi
+.PP
+Entire functions are also identified as fragments if they
+have the form:
+.IP ""
+.nf
+/* name - comments */
+ ... name(...)
+{
+   ...
+}
+.fi
+.PP
+Spacing, etc. must be
+.I exactly
+as given.
+The section delimiters are
+.I not
+included in the fragment.
+.PP
+.I loom
+accepts the following options.
+Options take effect when they are encountered during the left-to-right
+processing of the arguments.
+Thus, their placement is significant.
+.TP
+\fB\-I \fIdirectory\fR
+Add
+.I directory
+to the list of directories examined when searching for a
+file given in a %include line.
+The directories are examined in the order given by \fB-I\fR options.
+.TP
+\fB\-f\fI cmd\fR
+Use
+.I cmd
+as the `default filter' for %include lines on which filters are omitted.
+.PP
+The primary use of
+.I loom
+is to include program fragments in
+.I troff
+or TeX documents.
+.SH "SEE ALSO"
+troff(1)
+.SH DIAGNOSTICS
+Mostly self-explanatory messages.
+.SH BUGS
+Erroneous %include lines and section delimiters are handled ungracefully.
